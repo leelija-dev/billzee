@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Invoice App{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <h2 class="text-lg font-medium text-gray-900">{{ title }}</h2>
+        <form method="post" class="mt-5 space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                <div>
+                    <label for="{{ form.customer_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Customer Name
+                    </label>
+                    {{ form.customer_name }}
+                    {% if form.customer_name.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.customer_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.customer_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Customer Email
+                    </label>
+                    {{ form.customer_email }}
+                    {% if form.customer_email.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.customer_email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.billing_date.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Billing Date
+                    </label>
+                    {{ form.billing_date }}
+                    {% if form.billing_date.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.billing_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.due_date.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Due Date
+                    </label>
+                    {{ form.due_date }}
+                    {% if form.due_date.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.due_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Notes
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                <p class="mt-2 text-sm text-red-600">{{ form.notes.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-lg font-medium text-gray-900">Invoice Items</h3>
+                {{ formset.management_form }}
+                {% if formset.non_form_errors %}
+                <div class="mt-2 text-sm text-red-600">
+                    {% for error in formset.non_form_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="mt-4 space-y-4" id="invoice-items">
+                    <div class="invoice-item border rounded p-4">
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Item</label>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Unit Price</label> 
+                            </div>
+                        </div>
+                    </div>
+
+                    {% for form in formset %}
+                    <div class="invoice-item border-b rounded p-4">
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
+                            <div>
+                                {{ form.item }}
+                                {% if form.item.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.item.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.quantity.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.unit_price }}
+                                {% if form.unit_price.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.unit_price.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <label class="inline-flex items-center">
+                                {{ form.DELETE }}
+                                <span class="ml-2 text-sm text-gray-600">Delete this item</span>
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" id="add-item" class="mt-4 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Add Item
+                </button>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <a href="{% url 'invoices:dashboard' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700">
+                    Save Invoice
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('add-item').addEventListener('click', function() {
+    const itemsContainer = document.getElementById('invoice-items');
+    const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+    const formNum = parseInt(totalForms.value);
+    
+    const emptyForm = document.querySelector('.invoice-item').cloneNode(true);
+    const formRegex = RegExp('form-(\\d){1}-','g');
+    
+    emptyForm.innerHTML = emptyForm.innerHTML.replace(formRegex, `form-${formNum}-`);
+    
+    // Clear values in the cloned form
+    emptyForm.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+        input.value = '';
+    });
+    emptyForm.querySelector('input[type="checkbox"]').checked = false;
+    
+    itemsContainer.appendChild(emptyForm);
+    totalForms.value = formNum + 1;
+});
+</script>
+{% endblock %}

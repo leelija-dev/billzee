@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-gray-900">
+                Invoice #{{ invoice.invoice_id|truncatechars:8 }}
+            </h1>
+            <div class="flex items-center space-x-4">
+                <a href="{% url 'invoices:dashboard' %}" class="text-sm text-gray-600 hover:text-gray-900">
+                    &larr; Back to Dashboard
+                </a>
+                <div class="flex items-center space-x-2">
+                    <a href="{% url 'invoices:edit' invoice.pk %}" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Edit
+                    </a>
+                    <form action="{% url 'invoices:send' invoice.pk %}" method="post" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600">
+                            Send Invoice
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if invoice.profile %}
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-2 gap-8">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900 mb-2">From</h2>
+                    <div class="text-gray-600">
+                        <p class="font-medium">{{ invoice.profile.company_name }}</p>
+                        <p>{{ invoice.profile.company_email }}</p>
+                        {% if invoice.profile.phone_number %}
+                        <p>{{ invoice.profile.phone_number }}</p>
+                        {% endif %}
+                        {% if invoice.profile.address %}
+                        <p>{{ invoice.profile.address }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900 mb-2">To</h2>
+                    <div class="text-gray-600">
+                        <p class="font-medium">{{ invoice.customer_name }}</p>
+                        <p>{{ invoice.customer_email }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-8 mb-6">
+                    <div>
+                        <p class="text-sm text-gray-600">Invoice Date</p>
+                        <p class="text-gray-900">{{ invoice.billing_date }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Due Date</p>
+                        <p class="text-gray-900">{{ invoice.due_date }}</p>
+                    </div>
+                </div>
+
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Description
+                            </th>
+                            <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Quantity
+                            </th>
+                            <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Unit Price
+                            </th>
+                            <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Total
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in invoice.items.all %}
+                        <tr>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                {{ item.description }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 text-right">
+                                {{ item.quantity }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 text-right">
+                                ${{ item.unit_price }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 text-right">
+                                ${{ item.total_price }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
+                                Total
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
+                                ${{ invoice.total_amount }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                {% if invoice.notes %}
+                <div class="mt-6">
+                    <h3 class="text-sm font-medium text-gray-900">Notes</h3>
+                    <p class="mt-2 text-sm text-gray-600">{{ invoice.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="px-6 py-4 bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                            {% if invoice.status == 'completed' %}
+                                bg-green-100 text-green-800
+                            {% elif invoice.status == 'pending' %}
+                                bg-yellow-100 text-yellow-800
+                            {% else %}
+                                bg-red-100 text-red-800
+                            {% endif %}">
+                            {{ invoice.status|title }}
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <form action="{% url 'invoices:delete' invoice.pk %}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this invoice?');">
+                            {% csrf_token %}
+                            <button type="submit" class="text-sm text-red-600 hover:text-red-800">
+                                Delete Invoice
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
