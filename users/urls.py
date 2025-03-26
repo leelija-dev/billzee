@@ -4,6 +4,7 @@ from . import views
 app_name = 'users'  # Add namespace to match the existing pattern
 
 urlpatterns = [
+    path('register/', views.register, name='register'),
     path('settings/', views.profile_settings, name='profile_settings'),
     path('profiles/', views.profile_list, name='profile_list'),
     path('profiles/create/', views.profile_create, name='profile_create'),

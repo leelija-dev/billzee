@@ -130,14 +130,14 @@ def send_invoice(request, pk):
             'invoice': invoice,
             'view_url': customer_url
         })
-        
+        # return JsonResponse({'data': invoice.profile.password})
         connection = get_connection(
             host=settings.EMAIL_HOST,
             port=settings.EMAIL_PORT,
             username=invoice.profile.company_email,
-            # password=email_settings['EMAIL_HOST_PASSWORD'],
+            password=invoice.profile.password,
             use_tls=settings.EMAIL_USE_TLS,
-            DEFAULT_FROM_EMAIL= 'jbleelija@gmail.com'
+            # DEFAULT_FROM_EMAIL= 'jbleelija@gmail.com'
         )
         # return JsonResponse({'data': invoice.profile.company_email})
         # Send email
