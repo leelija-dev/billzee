@@ -8,7 +8,7 @@
     <div class="px-4 py-5 sm:px-6">
         {% comment %} <h2 class="text-2xl font-bold text-gray-900">Invoice #{{ invoice.invoice_id|truncatechars:8 }}</h2> {% endcomment %}
         <h2 class="text-2xl font-bold text-gray-900">Invoice #{{ invoice.invoice_id }}</h2>
-        <p class="mt-1 max-w-2xl text-sm text-gray-500">From: {{ invoice.user.company_name }}</p>
+        <p class="mt-1 max-w-2xl text-sm text-gray-500">From: {{ invoice.profile.company_name }}</p>
     </div>
 
     <!-- Invoice Status -->
