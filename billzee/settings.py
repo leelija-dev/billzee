@@ -106,7 +106,7 @@ EMAIL_PORT = 587
 # EMAIL_HOST_USER = 'jbleelija@gmail.com'
 # EMAIL_HOST_PASSWORD = 'dsdi bpxf zngy hvhl'
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'jbleelija@gmail.com'
+# DEFAULT_FROM_EMAIL = 'jbleelija@gmail.com'
 
 # Custom user model
 AUTH_USER_MODEL = 'users.CustomUser'
