@@ -72,7 +72,7 @@
                     <thead>
                         <tr>
                             <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Description
+                                Item
                             </th>
                             <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Quantity
@@ -89,7 +89,7 @@
                         {% for item in invoice.items.all %}
                         <tr>
                             <td class="px-6 py-4 text-sm text-gray-900">
-                                {{ item.description }}
+                                {{ item.item }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900 text-right">
                                 {{ item.quantity }}

@@ -139,6 +139,7 @@
                     {% if formset.forms %}
                     {% for form in formset %}
                     <div class="invoice-item border-b rounded p-4 mb-4">
+                        {{ form.id }}
                         <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
                             <div>
                                 {{ form.item }}
@@ -178,6 +179,7 @@
                 <!-- Hidden template for a new invoice item -->
                 <div id="empty-form-template" class="hidden">
                     <div class="invoice-item border-b rounded p-4 mb-4">
+                        {{ formset.empty_form.id }}
                         <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
                             <div>
                                 {{ formset.empty_form.item }}
@@ -206,7 +208,7 @@
                     <button id="dropdownStatus" type="button"
                         class="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
                         aria-expanded="true" aria-haspopup="true">
-                        Select Status
+                        {% if invoice %}Status: {{ invoice.status|title }}{% else %}Select Status{% endif %}
                         <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
                             fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd"
@@ -229,11 +231,15 @@
                 </a>
                 <button type="submit"
                     class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700">
-                    Save Invoice
+                    {% if invoice.id %}
+                        Update Invoice
+                    {% else %} 
+                    Save Invoice  
+                    {% endif %}
                 </button>
             </div>
               <!-- Hidden input to the selected status -->
-              <input type="hidden" id="status-input" name="status" value="">
+              <input type="hidden" id="status-input" name="status" value="{% if invoice %}{{ invoice.status }}{% endif %}">
         </form>
     </div>
 </div>

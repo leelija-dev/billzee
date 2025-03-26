@@ -76,6 +76,7 @@ def invoice_detail(request, pk):
 def invoice_update(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk, profile__user=request.user)
     if request.method == 'POST':
+        # return JsonResponse({'data':request.POST})
         form = InvoiceForm(request.POST, instance=invoice)
         formset = InvoiceItemFormSet(request.POST, queryset=InvoiceItem.objects.filter(invoice=invoice))
         if form.is_valid() and formset.is_valid():
