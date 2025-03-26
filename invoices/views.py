@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
+from django.core.mail import send_mail,  get_connection
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.contrib import messages
@@ -125,21 +125,31 @@ def send_invoice(request, pk):
         customer_url = request.build_absolute_uri(
             reverse('invoices:customer_view', kwargs={'uuid': invoice.invoice_id})
         )
-        
         # Render email template
         email_html = render_to_string('invoices/email_invoice.html', {
             'invoice': invoice,
             'view_url': customer_url
         })
         
+        connection = get_connection(
+            host=settings.EMAIL_HOST,
+            port=settings.EMAIL_PORT,
+            username=invoice.profile.company_email,
+            # password=email_settings['EMAIL_HOST_PASSWORD'],
+            use_tls=settings.EMAIL_USE_TLS,
+            DEFAULT_FROM_EMAIL= 'jbleelija@gmail.com'
+        )
+        # return JsonResponse({'data': invoice.profile.company_email})
         # Send email
         send_mail(
             subject=f'Invoice #{invoice.invoice_id} from {invoice.profile.company_name}',
             message=strip_tags(email_html),
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            # from_email=settings.DEFAULT_FROM_EMAIL,
+            from_email=invoice.profile.company_email,
             recipient_list=[invoice.customer_email],
             html_message=email_html,
             fail_silently=False,
+            connection=connection
         )
         
         messages.success(request, f'Invoice sent to {invoice.customer_email}')
