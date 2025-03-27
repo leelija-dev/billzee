@@ -67,10 +67,21 @@ def invoice_create(request):
 @login_required
 def invoice_detail(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk, profile__user=request.user)
+
+    subtotal = invoice.subtotal_amount or 0
+    gst_rate = invoice.gst_rate or 0
+
+    gst_amount = (subtotal * gst_rate) / 100
+
+    total_amount = subtotal + gst_amount
+
     return render(request, 'invoices/invoice_detail.html', {
         'invoice': invoice,
+        'gst_amount': gst_amount,
+        'total_amount': total_amount,
         'title': f'Invoice #{invoice.invoice_id}'
     })
+
 
 @login_required
 def invoice_update(request, pk):
@@ -161,6 +172,11 @@ def customer_invoice_view(request, uuid):
     # if not invoice.is_sent:
     #     invoice.is_sent = True
     #     invoice.save()
+    subtotal = invoice.subtotal_amount or 0
+    gst_rate = invoice.gst_rate or 0
+    gst_amount = (subtotal * gst_rate) / 100
+    total_amount = subtotal + gst_amount
+
     if request.method == 'POST' and 'mark_paid' in request.POST:
         # Mark the invoice as paid
         invoice.status = 'completed'
@@ -169,9 +185,13 @@ def customer_invoice_view(request, uuid):
         # return redirect('invoices:detail', pk=invoice.pk)
         return render(request, 'invoices/customer_invoice_view.html', {
             'invoice': invoice,
+            'gst_amount': gst_amount,
+            'total_amount': total_amount,
             'title': f'Invoice #{invoice.invoice_id}'
         })
     return render(request, 'invoices/customer_invoice_view.html', {
         'invoice': invoice,
+        'gst_amount': gst_amount,
+        'total_amount': total_amount,
         'title': f'Invoice #{invoice.invoice_id}'
     })

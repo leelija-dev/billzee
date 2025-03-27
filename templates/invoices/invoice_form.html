@@ -66,50 +66,75 @@
                     <div>
                         <h3 class="text-lg font-medium text-gray-900">Invoice Items</h3>
                     </div>
-                    <div class="relative inline-block text-left">
-                        <!-- Dropdown Button -->
-                        <button id="dropdownButton" type="button"
-                            class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                            aria-expanded="true" aria-haspopup="true">
-                            Currency
-                            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd"
-                                    d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                        </button>
+                    <div class="flex justify-end gap-x-4">
+                        <div class="relative inline-block text-left">
+                            <button id="dropdownButton" type="button"
+                                class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+                                aria-expanded="true" aria-haspopup="true">
+                                Currency
+                                <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                    fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd"
+                                        d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
 
-                        <!-- Dropdown Menu -->
-                        <div id="dropdownMenu"
-                            class="origin-top-right absolute right-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
-                            <div class="py-1" role="menu" aria-orientation="vertical"
-                                aria-labelledby="dropdownButton">
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
-                                    data-currency="USD" role="menuitem">USD</a>
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
-                                    data-currency="INR" role="menuitem">INR</a>
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
-                                    data-currency="EUR" role="menuitem">EUR </a>
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
-                                    data-currency="GBP" role="menuitem">GBP </a>
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
-                                    data-currency="JPY" role="menuitem">JPY</a>
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
-                                    data-currency="AUD" role="menuitem">AUD </a>
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
-                                    data-currency="CAD" role="menuitem">CAD</a>
+                            <div id="dropdownMenu"
+                                class="origin-top-right absolute right-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
+                                <div class="py-1" role="menu" aria-orientation="vertical"
+                                    aria-labelledby="dropdownButton">
+                                    <a href="#"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
+                                        data-currency="USD" role="menuitem">USD</a>
+                                    <a href="#"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
+                                        data-currency="INR" role="menuitem">INR</a>
+                                    <a href="#"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
+                                        data-currency="EUR" role="menuitem">EUR</a>
+                                    <a href="#"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
+                                        data-currency="GBP" role="menuitem">GBP</a>
+                                    <a href="#"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
+                                        data-currency="JPY" role="menuitem">JPY</a>
+                                    <a href="#"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
+                                        data-currency="AUD" role="menuitem">AUD</a>
+                                    <a href="#"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 currency-option"
+                                        data-currency="CAD" role="menuitem">CAD</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="gstDropdownContainer" class="relative text-left hidden">
+                            <button id="gstDropdownButton" type="button"
+                                class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+                                aria-expanded="true" aria-haspopup="true">
+                                GST: 0%
+                                <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                    fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd"
+                                        d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+
+                            <div id="gstDropdownMenu"
+                                class="origin-top-right absolute right-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
+                                <div class="py-1" role="menu" aria-orientation="vertical"
+                                    aria-labelledby="gstDropdownButton">
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 gst-option" data-gst="0" role="menuitem">0%</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 gst-option" data-gst="5" role="menuitem">5%</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 gst-option" data-gst="12" role="menuitem">12%</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 gst-option" data-gst="18" role="menuitem">18%</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 gst-option" data-gst="28" role="menuitem">28%</a>
+                                </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
                 {{ formset.management_form }}
                 {% if formset.non_form_errors %}
@@ -120,7 +145,6 @@
                 </div>
                 {% endif %}
 
-                <!-- Header for invoice items -->
                 <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3 mb-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Item</label>
@@ -134,7 +158,6 @@
                     </div>
                 </div>
 
-                <!-- Container for invoice items -->
                 <div id="invoice-items">
                     {% if formset.forms %}
                     {% for form in formset %}
@@ -176,7 +199,6 @@
                     Add Item
                 </button>
 
-                <!-- Hidden template for a new invoice item -->
                 <div id="empty-form-template" class="hidden">
                     <div class="invoice-item border-b rounded p-4 mb-4">
                         {{ formset.empty_form.id }}
@@ -197,57 +219,73 @@
                                 </label>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
+            <div class="w-screen flex justify-between max-w-7xl mx-auto fixed bottom-1 bg-gray-700 p-1 right-0 left-0 lg:pl-4 lg:pr-4 rounded-t">
+                <div>
+                    <a href="{% url 'invoices:dashboard' %}"
+                        class="inline-flex items-center px-4 py-2 border-none shadow-sm text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-700">
+                        Cancel
+                    </a>
+                </div>
 
-            <div class="w-screen flex justify-end space-x-3 max-w-7xl mx-auto fixed bottom-0 bg-gray-700 p-1 right-0 left-0 rounded-t">
-                <p id="status-error" class="mt-2 text-sm text-red-600 hidden">Please select a status.</p>
-                <div class="relative inline-block text-left">
-                    <button id="dropdownStatus" type="button"
-                        class="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                        aria-expanded="true" aria-haspopup="true">
-                        {% if invoice %}Status: {{ invoice.status|title }}{% else %}Select Status{% endif %}
-                        <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                            fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd"
-                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                    <div id="dropdownStatusMenu"
-                        class="origin-top-right absolute bottom-full right-0 mb-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
-                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="dropdownStatus">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 status-option" data-status="pending" role="menuitem">Pending</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 status-option" data-status="completed" role="menuitem">Completed</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 status-option" data-status="canceled" role="menuitem">Canceled</a>
+                <div class="flex justify-end align-baseline space-x-3 relative">
+                    <div id="gstDiv" class="flex gap-x-4 text-white align-middle mt-2 hidden">
+                        <p>GST : </p>
+                        <p id="gst-amount"></p>
+                    </div>
+                    <div id="subtotalDiv" class="flex gap-x-4 text-white align-middle mt-2 hidden">
+                        <p>Subtotal : </p>
+                        <p id="subtotal-amount"></p>
+                    </div>
+                    <div class="flex gap-x-4 text-white align-middle mt-2">
+                        <p>Total amount : </p>
+                        <p id="total-amount"></p>
+                    </div>
+                    <p id="status-error" class="-top-10 left-0 text-sm bg-red-500 text-white shadow rounded-md border-gray-500 p-2 absolute hidden">Please select a status.</p>
+                    <div class="relative inline-block text-left">
+                        <button id="dropdownStatus" type="button"
+                            class="inline-flex justify-center w-48 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+                            aria-expanded="true" aria-haspopup="true">
+                            {% if invoice %}Status: {{ invoice.status|title }}{% else %}Select Status{% endif %}
+                            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd"
+                                    d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div id="dropdownStatusMenu"
+                            class="origin-top-right absolute bottom-full right-0 mb-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
+                            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="dropdownStatus">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 status-option" data-status="pending" role="menuitem">Pending</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 status-option" data-status="completed" role="menuitem">Completed</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 status-option" data-status="canceled" role="menuitem">Canceled</a>
+                            </div>
                         </div>
                     </div>
+                    <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700">
+                        {% if invoice.id %}
+                            Update Invoice
+                        {% else %} 
+                            Save Invoice  
+                        {% endif %}
+                    </button>
                 </div>
-                <a href="{% url 'invoices:dashboard' %}"
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Cancel
-                </a>
-                <button type="submit"
-                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700">
-                    {% if invoice.id %}
-                        Update Invoice
-                    {% else %} 
-                    Save Invoice  
-                    {% endif %}
-                </button>
             </div>
-              <!-- Hidden input to the selected status -->
-              <input type="hidden" id="status-input" name="status" value="{% if invoice %}{{ invoice.status }}{% endif %}">
+
+            <!-- Hidden inputs -->
+            <input type="hidden" id="currency-input" name="currency" value="{% if invoice %}{{ invoice.currency }}{% else %}USD{% endif %}">
+            <input type="hidden" id="status-input" name="status" value="{% if invoice %}{{ invoice.status }}{% endif %}">
+            <input type="hidden" id="gst-input" name="gst_rate" value="{% if invoice %}{{ invoice.gst_rate }}{% else %}0{% endif %}">
+            <input type="hidden" id="subtotal-input" name="subtotal_amount" value="{% if invoice %}{{ invoice.subtotal_amount }}{% else %}0{% endif %}">
         </form>
     </div>
 </div>
 
 <script>
-    // Set USD as default currency
-    document.getElementById('dropdownButton').textContent = 'USD';
-
     const currencySymbols = {
         'USD': '$',
         'INR': '₹',
@@ -258,7 +296,6 @@
         'CAD': 'C$'
     };
 
-    // Function to update currency symbols
     function updateCurrencySymbols(currency) {
         const symbol = currencySymbols[currency];
         document.getElementById('currency-symbol').textContent = symbol;
@@ -271,41 +308,121 @@
         const itemsContainer = document.getElementById('invoice-items');
         const totalForms = document.getElementById('id_form-TOTAL_FORMS');
         let formNum = parseInt(totalForms.value);
-
-        // Get the hidden empty form template HTML
         const template = document.getElementById('empty-form-template').innerHTML;
-        // Replace the __prefix__ placeholder with the current form number
         const newFormHtml = template.replace(/__prefix__/g, formNum);
-
-        // Create a temporary container to hold the new form markup
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = newFormHtml;
-        // Append the new form to the invoice items container
         itemsContainer.appendChild(tempDiv.firstElementChild);
-
-        // Increment the TOTAL_FORMS count
         totalForms.value = formNum + 1;
     });
 
-    document.getElementById('dropdownButton').addEventListener('click', function () {
-        const menu = document.getElementById('dropdownMenu');
-        // Toggle the 'hidden' class to show/hide the dropdown
-        menu.classList.toggle('hidden');
+    function calculateTotal() {
+        let total = 0;
+        document.querySelectorAll('.invoice-item').forEach(item => {
+            const quantityInput = item.querySelector('input[name$="-quantity"]');
+            const unitPriceInput = item.querySelector('input[name$="-unit_price"]');
+            const deleteCheckbox = item.querySelector('input[name$="-DELETE"]');
+            if (!deleteCheckbox.checked) {
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const unitPrice = parseFloat(unitPriceInput.value) || 0;
+                total += quantity * unitPrice;
+            }
+        });
+        
+        const selectedCurrency = document.getElementById('currency-input').value;
+        const symbol = currencySymbols[selectedCurrency];
+        if (selectedCurrency === 'INR') {
+            const gstText = document.getElementById('gstDropdownButton').textContent;
+            const gstRate = parseFloat(gstText.replace('GST: ', '').replace('%', '')) || 0;
+            const gstAmount = (total * gstRate) / 100;
+            const finalTotal = total + gstAmount;
+            document.getElementById('subtotal-amount').textContent = `${symbol} ${total.toFixed(2)}`;
+            document.getElementById('gst-amount').textContent = `${symbol} ${gstAmount.toFixed(2)}`;
+            document.getElementById('total-amount').textContent = `${symbol} ${finalTotal.toFixed(2)}`;
+            document.getElementById('gst-input').value = gstRate;
+            document.getElementById('subtotal-input').value = total.toFixed(2);
+        } else {
+            document.getElementById('total-amount').textContent = `${symbol} ${total.toFixed(2)}`;
+            document.getElementById('gst-input').value = 0;
+            document.getElementById('subtotal-input').value = total.toFixed(2);
+        }
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target.matches('input[name$="-quantity"]') || e.target.matches('input[name$="-unit_price"]')) {
+            calculateTotal();
+        }
     });
 
-    // Close dropdown when clicking outside
+    document.addEventListener('change', function(e) {
+        if (e.target.matches('input[name$="-DELETE"]')) {
+            calculateTotal();
+        }
+    });
+
+    document.getElementById('dropdownButton').addEventListener('click', function () {
+        document.getElementById('dropdownMenu').classList.toggle('hidden');
+    });
+
     document.addEventListener('click', function (event) {
         const dropdownButton = document.getElementById('dropdownButton');
         const dropdownMenu = document.getElementById('dropdownMenu');
-
         if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
             dropdownMenu.classList.add('hidden');
         }
     });
 
+    document.querySelectorAll('.currency-option').forEach(option => {
+        option.addEventListener('click', async function (e) {
+            e.preventDefault();
+            const selectedCurrency = this.dataset.currency;
+            const currentCurrency = document.getElementById('currency-input').value;
+
+            if (currentCurrency !== selectedCurrency) {
+                try {
+                    const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
+                    const data = await response.json();
+                    const rateFromUSDToCurrent = data.rates[currentCurrency];
+                    const rateFromUSDToSelected = data.rates[selectedCurrency];
+                    const conversionRate = rateFromUSDToSelected / rateFromUSDToCurrent;
+
+                    document.querySelectorAll('.invoice-item').forEach(item => {
+                        const unitPriceInput = item.querySelector('input[name$="-unit_price"]');
+                        const currentPrice = parseFloat(unitPriceInput.value) || 0;
+                        const convertedPrice = (currentPrice * conversionRate).toFixed(2);
+                        unitPriceInput.value = convertedPrice;
+                    });
+                } catch (error) {
+                    console.error('Error fetching exchange rates:', error);
+                    alert('Error converting currency. Please try again later.');
+                }
+            }
+
+            document.getElementById('dropdownButton').textContent = selectedCurrency;
+            document.getElementById('currency-input').value = selectedCurrency;
+            document.getElementById('dropdownMenu').classList.add('hidden');
+            updateCurrencySymbols(selectedCurrency);
+
+            const gstOption = document.getElementById('gstDropdownContainer');
+            const subTotalDiv = document.getElementById('subtotalDiv');
+            const gstDiv = document.getElementById('gstDiv');
+            if (selectedCurrency === 'INR') {
+                gstOption.classList.remove('hidden');
+                subTotalDiv.classList.remove('hidden');
+                gstDiv.classList.remove('hidden');
+            } else {
+                gstOption.classList.add('hidden');
+                subTotalDiv.classList.add('hidden');
+                gstDiv.classList.add('hidden');
+                document.getElementById('gst-input').value = 0;
+                document.getElementById('gstDropdownButton').textContent = 'GST: 0%';
+            }
+            calculateTotal();
+        });
+    });
+
     document.getElementById('dropdownStatus').addEventListener('click', () => {
-        const dropdownStatusMenu = document.getElementById('dropdownStatusMenu');
-        dropdownStatusMenu.classList.toggle('hidden');
+        document.getElementById('dropdownStatusMenu').classList.toggle('hidden');
     });
 
     document.addEventListener('click', function (e) {
@@ -316,86 +433,60 @@
         }
     });
 
-    // Store original prices for conversion
-    let originalPrices = new Map();
-
-    // Function to update prices based on selected currency
-    async function updatePrices(selectedCurrency) {
-
-        updateCurrencySymbols(selectedCurrency);
-        if (selectedCurrency === 'USD') {
-            // If USD is selected, restore original prices
-            document.querySelectorAll('.invoice-item').forEach(item => {
-                const unitPriceInput = item.querySelector('input[name$="-unit_price"]');
-                const originalPrice = originalPrices.get(unitPriceInput.id);
-                if (originalPrice) {
-                    unitPriceInput.value = originalPrice;
-                }
-            });
-            return;
-        }
-
-        try {
-            // Fetch exchange rate from API
-            const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
-            const data = await response.json();
-            const rate = data.rates[selectedCurrency];
-
-            // Update all unit prices
-            document.querySelectorAll('.invoice-item').forEach(item => {
-                updateCurrencySymbols(selectedCurrency);
-                const unitPriceInput = item.querySelector('input[name$="-unit_price"]');
-                if (!originalPrices.has(unitPriceInput.id)) {
-                    originalPrices.set(unitPriceInput.id, unitPriceInput.value);
-                }
-                const originalPrice = originalPrices.get(unitPriceInput.id);
-                if (originalPrice) {
-                    const convertedPrice = (parseFloat(originalPrice) * rate).toFixed(2);
-                    unitPriceInput.value = convertedPrice;
-                }
-            });
-        } catch (error) {
-            console.error('Error fetching exchange rates:', error);
-            alert('Error converting currency. Please try again later.');
-        }
-    }
-
-    // Add click handlers for currency options
-    document.querySelectorAll('.currency-option').forEach(option => {
-        option.addEventListener('click', function (e) {
-            e.preventDefault();
-            const selectedCurrency = this.dataset.currency;
-            document.getElementById('dropdownButton').textContent = selectedCurrency;
-            document.getElementById('dropdownMenu').classList.add('hidden');
-            updatePrices(selectedCurrency);
-        });
-    });
-
-    // Add click handlers for status options
     document.querySelectorAll('.status-option').forEach(option => {
         option.addEventListener('click', function(e) {
             e.preventDefault();
             const selectedStatus = this.dataset.status;
             const displayText = this.textContent;
-            document.getElementById('dropdownStatus').textContent = displayText;
+            document.getElementById('dropdownStatus').textContent = `Status: ${displayText}`;
             document.getElementById('status-input').value = selectedStatus;
             document.getElementById('dropdownStatusMenu').classList.add('hidden');
-            // Remove error message if it exists
-            const errorEl = document.getElementById('status-error');
-            if (errorEl) {
-            errorEl.classList.add('hidden');
-            }
+            document.getElementById('status-error').classList.add('hidden');
         });
     });
 
-    
-    // Prevent form submission if status is not selected
-  document.getElementById('invoice-form').addEventListener('submit', function(e) {
-    const statusValue = document.getElementById('status-input').value;
-    if (!statusValue) {
-      e.preventDefault();
-      document.getElementById('status-error').classList.remove('hidden');
-    }
-  });
+    document.getElementById('gstDropdownButton').addEventListener('click', () => {
+        document.getElementById('gstDropdownMenu').classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', function (e) {
+        const gstDropdownButton = document.getElementById('gstDropdownButton');
+        const gstDropdownMenu = document.getElementById('gstDropdownMenu');
+        if (!gstDropdownButton.contains(e.target) && !gstDropdownMenu.contains(e.target)) {
+            gstDropdownMenu.classList.add('hidden');
+        }
+    });
+
+    document.querySelectorAll('.gst-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            const selectedGst = this.dataset.gst;
+            document.getElementById('gstDropdownButton').textContent = `GST: ${selectedGst}%`;
+            document.getElementById('gstDropdownMenu').classList.add('hidden');
+            calculateTotal();
+        });
+    });
+
+    document.getElementById('invoice-form').addEventListener('submit', function(e) {
+        const statusValue = document.getElementById('status-input').value;
+        if (!statusValue) {
+            e.preventDefault();
+            document.getElementById('status-error').classList.remove('hidden');
+        }
+    });
+
+    window.addEventListener('load', function() {
+        const initialCurrency = document.getElementById('currency-input').value;
+        document.getElementById('dropdownButton').textContent = initialCurrency;
+        updateCurrencySymbols(initialCurrency);
+        if (initialCurrency === 'INR') {
+            const gstRate = document.getElementById('gst-input').value;
+            document.getElementById('gstDropdownButton').textContent = `GST: ${gstRate}%`;
+            document.getElementById('gstDropdownContainer').classList.remove('hidden');
+            document.getElementById('subtotalDiv').classList.remove('hidden');
+            document.getElementById('gstDiv').classList.remove('hidden');
+        }
+        calculateTotal();
+    });
 </script>
 {% endblock %}
