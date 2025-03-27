@@ -3,7 +3,7 @@
 {% block title %}{{ title }} - Invoice App{% endblock %}
 
 {% block content %}
-<div class="bg-white shadow sm:rounded-lg">
+<div class="bg-white shadow sm:rounded-lg mb-10">
     <div class="px-4 py-5 sm:p-6">
         <h2 class="text-lg font-medium text-gray-900">{{ title }}</h2>
         <form id="invoice-form" method="post" class="mt-5 space-y-6">
@@ -202,7 +202,7 @@
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-3">
+            <div class="w-screen flex justify-end space-x-3 max-w-7xl mx-auto fixed bottom-0 bg-gray-700 p-1 right-0 left-0 rounded-t">
                 <p id="status-error" class="mt-2 text-sm text-red-600 hidden">Please select a status.</p>
                 <div class="relative inline-block text-left">
                     <button id="dropdownStatus" type="button"
