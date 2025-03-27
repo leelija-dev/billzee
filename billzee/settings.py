@@ -112,6 +112,16 @@ EMAIL_USE_TLS = True
 AUTH_USER_MODEL = 'users.CustomUser'
 
 # Authentication settings
-LOGIN_REDIRECT_URL = '/invoices/'  # Update to match the authentication flow
-LOGIN_URL = '/accounts/login/'  # Add explicit login URL
-LOGOUT_REDIRECT_URL = 'login'
+LOGIN_REDIRECT_URL = '/invoices/dashboard/'  # Redirect to dashboard after login
+LOGIN_URL = '/login/'  # Update login URL to match our custom login view
+LOGOUT_REDIRECT_URL = None  # This will make Django use the logged_out.html template
+
+# Session settings
+SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Session expires when browser closes
+
+# Security settings
+CSRF_COOKIE_SECURE = True  # Only send CSRF cookie over HTTPS
+SESSION_COOKIE_SECURE = True  # Only send session cookie over HTTPS
+CSRF_COOKIE_HTTPONLY = True  # Prevent JavaScript access to CSRF cookie
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
