@@ -24,8 +24,10 @@
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
+    {% comment %} {% include 'components/users/navbar.html' %} {% endcomment %}
+    {% if not request.resolver_match.url_name in 'login,register,logout' %}
     {% include 'components/users/navbar.html' %}
-
+    {% endif %}
     <!-- Messages -->
     {% if messages %}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">

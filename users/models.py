@@ -3,7 +3,7 @@ from django.db import models
 
 class CustomUser(AbstractUser):
     company_name = models.CharField(max_length=100, blank=True)
-    company_email = models.EmailField(blank=True)
+    company_email = models.EmailField(blank=True),
     phone_number = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
     
@@ -15,6 +15,7 @@ class Profile(models.Model):
     is_active = models.BooleanField(default=False)
     company_name = models.CharField(max_length=100)
     company_email = models.EmailField()
+    password = models.CharField(max_length=128, default='')
     phone_number = models.CharField(max_length=20)
     address = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
