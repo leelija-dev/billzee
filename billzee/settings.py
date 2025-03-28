@@ -112,7 +112,7 @@ EMAIL_USE_TLS = True
 AUTH_USER_MODEL = 'users.CustomUser'
 
 # Authentication settings
-LOGIN_REDIRECT_URL = '/invoices/dashboard/'  # Redirect to dashboard after login
+LOGIN_REDIRECT_URL = '/'  # Redirect to home page after login
 LOGIN_URL = '/login/'  # Update login URL to match our custom login view
 LOGOUT_REDIRECT_URL = None  # This will make Django use the logged_out.html template
 

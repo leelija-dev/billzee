@@ -5,9 +5,10 @@ from django.conf.urls.static import static
 from django.views.generic.base import RedirectView
 from django.contrib.auth.views import LogoutView, LoginView
 from django.contrib.auth.decorators import login_required
+from invoices.views import dashboard
 
 urlpatterns = [
-    path('', login_required(RedirectView.as_view(url='/invoices/')), name='home'),
+    path('', login_required(dashboard), name='home'),
     path('users/', include('users.urls')),
     path('invoices/', include('invoices.urls')),
     path('accounts/', include('django.contrib.auth.urls')),

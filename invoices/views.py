@@ -11,12 +11,31 @@ from .forms import InvoiceForm, InvoiceItemFormSet
 from users.models import Profile
 from django.db import transaction
 from django.http import JsonResponse
+from django.db.models import Q
 
 @login_required
 def dashboard(request):
     active_profile = Profile.objects.filter(user=request.user, is_active=True).first()
     if active_profile:
-        invoices = Invoice.objects.filter(profile=active_profile).order_by('-created_at')
+        invoices = Invoice.objects.filter(profile=active_profile)
+        
+        # Handle search
+        search_query = request.GET.get('search', '')
+        if search_query:
+            invoices = invoices.filter(
+                Q(invoice_id__icontains=search_query) |
+                Q(customer_name__icontains=search_query)
+            )
+        
+        # Handle sorting
+        allowed_sort_fields = ['invoice_id', 'customer_name', 'total_amount', 'status', 'due_date']
+        sort_by = request.GET.get('sort_by')
+        order = request.GET.get('order', 'asc')
+        if sort_by in allowed_sort_fields:
+            ordering = sort_by if order == 'asc' else f"-{sort_by}"
+        else:
+            ordering = '-created_at'
+        invoices = invoices.order_by(ordering)
     else:
         invoices = Invoice.objects.none()
     

@@ -16,11 +16,42 @@
 
     {% if active_profile %}
     <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between align-middle ">
             <div>
                 <h2 class="text-lg font-semibold text-gray-900">Active Business Profile</h2>
                 <p class="text-gray-600">{{ active_profile.company_name }}</p>
             </div>
+            {% if invoices %}
+            <div class="w-1/2 ">
+                <form method="GET" action="{% url 'invoices:dashboard' %}" class="flex gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" 
+                                name="search" 
+                                value="{{ request.GET.search }}"
+                                placeholder="Search by Invoice ID or Customer Name..." 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                {% if request.GET.search %}
+                                <a href="{% url 'invoices:dashboard' %}" class="absolute inset-y-0 right-0 flex items-center pr-3 text-red-500 hover:text-red-600">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </a>
+                                {% else %}
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Search
+                    </button>
+                </form>
+            </div>
+            {% endif %}
             <a href="{% url 'users:profile_list' %}" class="text-blue-600 hover:text-blue-800 text-sm">
                 Manage Profiles
             </a>
@@ -47,12 +78,34 @@
     </div>
     {% endif %}
 
-    {% if invoices %}
+    <!-- {% if invoices %}
+    <div class="mb-6 flex justify-end w-96">
+        <form method="GET" action="{% url 'invoices:dashboard' %}" class="flex gap-4">
+            <div class="flex-1">
+                <div class="relative">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ request.GET.search }}"
+                           placeholder="Search by Invoice ID or Customer Name..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Search
+            </button>
+        </form>
+    </div> -->
+
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Invoice ID
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -69,6 +122,94 @@
                     </th>
                     <th scope="col" class="relative px-6 py-3">
                         <span class="sr-only">Actions</span>
+                    </th> -->
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}sort_by=invoice_id&order={% if request.GET.sort_by == 'invoice_id' and request.GET.order == 'asc' %}desc{% else %}asc{% endif %}">
+                            Invoice ID
+                        </a>
+                        <svg class="inline-block h-4 w-4 ml-1 
+                            {% if request.GET.sort_by == 'invoice_id' %}
+                                {% if request.GET.order == 'asc' %}
+                                    text-blue-500
+                                {% else %}
+                                    text-red-500
+                                {% endif %}
+                            {% else %}
+                                text-gray-400
+                            {% endif %}" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="{% if request.GET.sort_by == 'invoice_id' and request.GET.order == 'asc' %}M12 8l6 6H6z{% else %}M12 16l-6-6h12z{% endif %}"/>
+                        </svg>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}sort_by=customer_name&order={% if request.GET.sort_by == 'customer_name' and request.GET.order == 'asc' %}desc{% else %}asc{% endif %}">
+                            Customer
+                        </a>
+                        <svg class="inline-block h-4 w-4 ml-1 
+                            {% if request.GET.sort_by == 'customer_name' %}
+                                {% if request.GET.order == 'asc' %}
+                                    text-blue-500
+                                {% else %}
+                                    text-red-500
+                                {% endif %}
+                            {% else %}
+                                text-gray-400
+                            {% endif %}" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="{% if request.GET.sort_by == 'customer_name' and request.GET.order == 'asc' %}M12 8l6 6H6z{% else %}M12 16l-6-6h12z{% endif %}"/>
+                        </svg>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}sort_by=total_amount&order={% if request.GET.sort_by == 'total_amount' and request.GET.order == 'asc' %}desc{% else %}asc{% endif %}">
+                            Amount
+                        </a>
+                        <svg class="inline-block h-4 w-4 ml-1 
+                            {% if request.GET.sort_by == 'total_amount' %}
+                                {% if request.GET.order == 'asc' %}
+                                    text-blue-500
+                                {% else %}
+                                    text-red-500
+                                {% endif %}
+                            {% else %}
+                                text-gray-400
+                            {% endif %}" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="{% if request.GET.sort_by == 'total_amount' and request.GET.order == 'asc' %}M12 8l6 6H6z{% else %}M12 16l-6-6h12z{% endif %}"/>
+                        </svg>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}sort_by=status&order={% if request.GET.sort_by == 'status' and request.GET.order == 'asc' %}desc{% else %}asc{% endif %}">
+                            Status
+                        </a>
+                        <svg class="inline-block h-4 w-4 ml-1 
+                            {% if request.GET.sort_by == 'status' %}
+                                {% if request.GET.order == 'asc' %}
+                                    text-blue-500
+                                {% else %}
+                                    text-red-500
+                                {% endif %}
+                            {% else %}
+                                text-gray-400
+                            {% endif %}" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="{% if request.GET.sort_by == 'status' and request.GET.order == 'asc' %}M12 8l6 6H6z{% else %}M12 16l-6-6h12z{% endif %}"/>
+                        </svg>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}sort_by=due_date&order={% if request.GET.sort_by == 'due_date' and request.GET.order == 'asc' %}desc{% else %}asc{% endif %}">
+                            Due Date
+                        </a>
+                        <svg class="inline-block h-4 w-4 ml-1 
+                            {% if request.GET.sort_by == 'due_date' %}
+                                {% if request.GET.order == 'asc' %}
+                                    text-blue-500
+                                {% else %}
+                                    text-red-500
+                                {% endif %}
+                            {% else %}
+                                text-gray-400
+                            {% endif %}" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="{% if request.GET.sort_by == 'due_date' and request.GET.order == 'asc' %}M12 8l6 6H6z{% else %}M12 16l-6-6h12z{% endif %}"/>
+                        </svg>
+                    </th>
+                    <th scope="col" class=" py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <span class="">Actions</span>
                     </th>
                 </tr>
             </thead>
