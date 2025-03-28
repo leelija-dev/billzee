@@ -17,24 +17,96 @@
         <form method="post" class="bg-white rounded-lg shadow p-6">
             {% csrf_token %}
             
+            <!-- Single Column Fields -->
             {% for field in form %}
-            <div class="mb-4">
-                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    {{ field.label }}
+                {% if field.name in 'company_name company_email password phone_number address' %}
+                <div class="mb-4">
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ field.label }}
+                    </label>
+                    {% if field.errors %}
+                    <div class="text-red-500 text-sm mb-2">
+                        {{ field.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="mt-1">
+                        {{ field|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+                    </div>
+                    {% if field.help_text %}
+                    <p class="mt-2 text-sm text-gray-500">{{ field.help_text }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+
+            <!-- Two Column Row: Country & Pin/Zip -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.country.label }}
+                    </label>
+                    {% if form.country.errors %}
+                    <div class="text-red-500 text-sm mb-2 ">
+                        {{ form.country.errors }}
+                    </div>
+                    {% endif %}
+                    {{ form.country|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+                </div>
+                
+                <div>
+                    <label for="{{ form.pin_or_zip.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.pin_or_zip.label }}
+                    </label>
+                    {% if form.pin_or_zip.errors %}
+                    <div class="text-red-500 text-sm mb-2">
+                        {{ form.pin_or_zip.errors }}
+                    </div>
+                    {% endif %}
+                    {{ form.pin_or_zip|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+                </div>
+            </div>
+            
+            <!-- Two Column Row: City & State -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.city.label }}
+                    </label>
+                    {% if form.city.errors %}
+                    <div class="text-red-500 text-sm mb-2">
+                        {{ form.city.errors }}
+                    </div>
+                    {% endif %}
+                    {{ form.city|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+                </div>
+                
+                <div>
+                    <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.state.label }}
+                    </label>
+                    {% if form.state.errors %}
+                    <div class="text-red-500 text-sm mb-2">
+                        {{ form.state.errors }}
+                    </div>
+                    {% endif %}
+                    {{ form.state|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+                </div>
+            </div>
+
+            <!-- Conditional GST Field -->
+            <div class="mb-4" id="gst-field-container" style="display: none;">
+                <label for="{{ form.gst_id.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.gst_id.label }}
                 </label>
-                {% if field.errors %}
+                {% if form.gst_id.errors %}
                 <div class="text-red-500 text-sm mb-2">
-                    {{ field.errors }}
+                    {{ form.gst_id.errors }}
                 </div>
                 {% endif %}
                 <div class="mt-1">
-                    {{ field|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+                    {{ form.gst_id|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
                 </div>
-                {% if field.help_text %}
-                <p class="mt-2 text-sm text-gray-500">{{ field.help_text }}</p>
-                {% endif %}
             </div>
-            {% endfor %}
 
             <div class="flex justify-end gap-4 mt-6">
                 <a href="{% url 'users:profile_list' %}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -47,4 +119,31 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const countryField = document.getElementById('id_country');
+        countryField.style.padding = '8px 12px';
+        const gstContainer = document.getElementById('gst-field-container');
+
+        function toggleGSTField() {
+            const isIndia = countryField.value.trim().toLowerCase() === 'india';
+            gstContainer.style.display = isIndia ? 'block' : 'none';
+            
+            // Handle required attribute for validation
+            const gstInput = document.getElementById('id_gst_id');
+            if (gstInput) {
+                gstInput.required = isIndia;
+            }
+        }
+
+        if (countryField && gstContainer) {
+            // Initial check
+            toggleGSTField();
+            
+            // Event listener for country changes
+            countryField.addEventListener('change', toggleGSTField);
+        }
+    });
+</script>
 {% endblock %}

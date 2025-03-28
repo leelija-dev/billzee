@@ -18,6 +18,11 @@ class Profile(models.Model):
     password = models.CharField(max_length=128, default='')
     phone_number = models.CharField(max_length=20)
     address = models.TextField()
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100)
+    pin_or_zip = models.CharField(max_length=20, blank=True)
+    gst_id = models.CharField(max_length=20, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
