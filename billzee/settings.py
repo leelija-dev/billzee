@@ -19,6 +19,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-your-secret-key-here'
 
+RAPIDAPI_KEY = 'c641fa4af9msh852a08a4ceded80p1ee740jsn7edfb34855a1'
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

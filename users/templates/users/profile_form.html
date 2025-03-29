@@ -10,7 +10,7 @@
                 {% if profile %}Edit{% else %}Create{% endif %} Business Profile
             </h1>
             <a href="{% url 'users:profile_list' %}" class="text-sm text-gray-600 hover:text-gray-900">
-                &larr; Back to Profiles
+                ← Back to Profiles
             </a>
         </div>
 
@@ -39,21 +39,20 @@
                 {% endif %}
             {% endfor %}
 
-            <!-- Two Column Row: Country & Pin/Zip -->
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
+            <!-- Two Column Row: Country & Pin/Zip with OK Button -->
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="col-span-1">
                     <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
                         {{ form.country.label }}
                     </label>
                     {% if form.country.errors %}
-                    <div class="text-red-500 text-sm mb-2 ">
+                    <div class="text-red-500 text-sm mb-2">
                         {{ form.country.errors }}
                     </div>
                     {% endif %}
-                    {{ form.country|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+                    {{ form.country|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" }}
                 </div>
-                
-                <div>
+                <div class="col-span-1">
                     <label for="{{ form.pin_or_zip.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
                         {{ form.pin_or_zip.label }}
                     </label>
@@ -64,22 +63,16 @@
                     {% endif %}
                     {{ form.pin_or_zip|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
                 </div>
+                <div class="col-span-1 flex items-end">
+                    <!-- OK button to trigger postal lookup -->
+                    <button type="button" id="pin-ok-btn" class="px-3 py-2 bg-green-500 text-white rounded-md text-sm font-medium hover:bg-green-600">
+                        OK
+                    </button>
+                </div>
             </div>
             
             <!-- Two Column Row: City & State -->
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                        {{ form.city.label }}
-                    </label>
-                    {% if form.city.errors %}
-                    <div class="text-red-500 text-sm mb-2">
-                        {{ form.city.errors }}
-                    </div>
-                    {% endif %}
-                    {{ form.city|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
-                </div>
-                
                 <div>
                     <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
                         {{ form.state.label }}
@@ -89,7 +82,19 @@
                         {{ form.state.errors }}
                     </div>
                     {% endif %}
-                    {{ form.state|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+                    {{ form.state|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" }}
+                </div>
+
+                <div>
+                    <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.city.label }}
+                    </label>
+                    {% if form.city.errors %}
+                    <div class="text-red-500 text-sm mb-2">
+                        {{ form.city.errors }}
+                    </div>
+                    {% endif %}
+                    {{ form.city|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" }}
                 </div>
             </div>
 
@@ -123,26 +128,174 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const countryField = document.getElementById('id_country');
-        countryField.style.padding = '8px 12px';
+        const stateField = document.getElementById('id_state');
+        const cityField = document.getElementById('id_city');
+        const pinField = document.getElementById('id_pin_or_zip');
+        const pinOkBtn = document.getElementById('pin-ok-btn');
         const gstContainer = document.getElementById('gst-field-container');
+        const getStatesUrl = "{% url 'users:get_states' %}";
+        const getCitiesUrl = "{% url 'users:get_cities' %}";
+        const getLocationUrl = "{% url 'users:get_location_by_zip' %}";
+
+        function updateStateOptions(countryCode) {
+            if (!stateField) return;
+            stateField.innerHTML = '';
+            const loadingOption = document.createElement('option');
+            loadingOption.textContent = 'Loading states...';
+            stateField.appendChild(loadingOption);
+
+            fetch(`${getStatesUrl}?country=${countryCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    stateField.innerHTML = '';
+                    if (data.states) {
+                        data.states.forEach(stateName => {
+                            const option = document.createElement('option');
+                            option.value = stateName;
+                            option.textContent = stateName;
+                            stateField.appendChild(option);
+                        });
+                        // If country is India, auto-select "West Bengal" if available.
+                        if (countryCode.trim().toUpperCase() === 'IN') {
+                            let defaultFound = false;
+                            for (let i = 0; i < stateField.options.length; i++) {
+                                if (stateField.options[i].textContent.trim().toLowerCase() === 'west bengal') {
+                                    stateField.selectedIndex = i;
+                                    defaultFound = true;
+                                    break;
+                                }
+                            }
+                            if (!defaultFound && stateField.options.length > 0) {
+                                stateField.selectedIndex = 0;
+                            }
+                            // Trigger city update for the auto-selected state
+                            updateCityOptions(stateField.value);
+                        }
+                    } else {
+                        const option = document.createElement('option');
+                        option.textContent = 'No states found';
+                        stateField.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching states:', error);
+                    stateField.innerHTML = '';
+                    const option = document.createElement('option');
+                    option.textContent = 'Error loading states';
+                    stateField.appendChild(option);
+                });
+        }
+
+        function updateCityOptions(stateValue) {
+            if (!cityField) return;
+            cityField.innerHTML = '';
+            const loadingOption = document.createElement('option');
+            loadingOption.textContent = 'Loading cities...';
+            cityField.appendChild(loadingOption);
+            const countryValue = countryField.value;
+            fetch(`${getCitiesUrl}?country=${countryValue}&state=${stateValue}`)
+                .then(response => response.json())
+                .then(data => {
+                    cityField.innerHTML = '';
+                    if (data.cities) {
+                        data.cities.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city;
+                            option.textContent = city;
+                            cityField.appendChild(option);
+                        });
+                        // If state is West Bengal, auto-select "Kolkata" if available.
+                        // if(!pinOkBtn){
+                        // if (stateValue.trim().toLowerCase() === 'west bengal') {
+                        //     for (let i = 0; i < cityField.options.length; i++) {
+                        //         if (cityField.options[i].textContent.trim().toLowerCase() === 'kolkata') {
+                        //             cityField.selectedIndex = i;
+                        //             break;
+                        //         }
+                        //     }
+                        // }
+                    } else {
+                        const option = document.createElement('option');
+                        option.textContent = 'No cities found';
+                        cityField.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching cities:', error);
+                    cityField.innerHTML = '';
+                    const option = document.createElement('option');
+                    option.textContent = 'Error loading cities';
+                    cityField.appendChild(option);
+                });
+        }
 
         function toggleGSTField() {
-            const isIndia = countryField.value.trim().toLowerCase() === 'india';
+            const isIndia = countryField.value.trim().toUpperCase() === 'IN';
             gstContainer.style.display = isIndia ? 'block' : 'none';
-            
-            // Handle required attribute for validation
             const gstInput = document.getElementById('id_gst_id');
             if (gstInput) {
                 gstInput.required = isIndia;
             }
         }
 
-        if (countryField && gstContainer) {
-            // Initial check
+        // Trigger lookup when OK button is clicked
+        if (pinOkBtn) {
+            pinOkBtn.addEventListener('click', function() {
+                const zipCode = pinField.value.trim();
+                const countryValue = countryField.value;
+                if (zipCode && countryValue) {
+                    fetch(`${getLocationUrl}?zip=${zipCode}&country=${countryValue}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.state && data.city) {
+                                // Update state dropdown if the returned state exists
+                                let stateFound = false;
+                                for (let i = 0; i < stateField.options.length; i++) {
+                                    if (stateField.options[i].textContent.trim().toLowerCase() === data.state.trim().toLowerCase()) {
+                                        stateField.selectedIndex = i;
+                                        stateFound = true;
+                                        break;
+                                    }
+                                }
+                                if (stateFound) {
+                                    // Update city dropdown based on the selected state
+                                    updateCityOptions(stateField.value);
+                                    // After a short delay, auto-select the returned city if it exists.
+                                    setTimeout(() => {
+                                        for (let i = 0; i < cityField.options.length; i++) {
+                                            if (cityField.options[i].textContent.trim().toLowerCase() === data.city.trim().toLowerCase()) {
+                                                cityField.selectedIndex = i;
+                                                break;
+                                            }
+                                        }
+                                    }, 1000);
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching location by zip:', error);
+                        });
+                }
+            });
+        }
+
+        // Update states and cities on country and state changes
+        if (countryField) {
+            updateStateOptions(countryField.value);
             toggleGSTField();
-            
-            // Event listener for country changes
-            countryField.addEventListener('change', toggleGSTField);
+            countryField.addEventListener('change', function() {
+                toggleGSTField();
+                updateStateOptions(this.value);
+            });
+        }
+        
+        if (stateField) {
+            stateField.addEventListener('change', function() {
+                updateCityOptions(this.value);
+            });
+            if(stateField.value) {
+                updateCityOptions(stateField.value);
+            }
         }
     });
 </script>

@@ -5,11 +5,20 @@
 {% block content %}
 <div class="bg-white shadow sm:rounded-lg mb-10">
     <div class="px-4 py-5 sm:p-6">
+        <div class="flex justify-between">
         <h2 class="text-lg font-medium text-gray-900">{{ title }}</h2>
-        <form id="invoice-form" method="post" class="mt-5 space-y-6">
+        <div class="">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Active Business Profile</h3>
+            <div class="flex justify-between gap-x-2">
+            <span class="bg-green-200 w-8/12 text-center rounded-sm align-middle px-1 ">{{ active_profile.company_name }}</span>
+            <button class="bg-blue-600 p-1 px-1.5 rounded hover:bg-blue-800 text-white text-sm">Change</button>
+            </div>
+        </div>
+        </div>
+        <form id="invoice-form" method="post" class="mt-2 space-y-6">
             {% csrf_token %}
 
-            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-y-4 -mt-4 gap-x-4 sm:grid-cols-2">
                 <div>
                     <label for="{{ form.customer_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
                         Customer Name
