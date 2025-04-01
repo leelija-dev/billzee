@@ -206,14 +206,14 @@
                         });
                         // If state is West Bengal, auto-select "Kolkata" if available.
                         // if(!pinOkBtn){
-                        // if (stateValue.trim().toLowerCase() === 'west bengal') {
-                        //     for (let i = 0; i < cityField.options.length; i++) {
-                        //         if (cityField.options[i].textContent.trim().toLowerCase() === 'kolkata') {
-                        //             cityField.selectedIndex = i;
-                        //             break;
-                        //         }
-                        //     }
-                        // }
+                        if (stateValue.trim().toLowerCase() === 'west bengal') {
+                            for (let i = 0; i < cityField.options.length; i++) {
+                                if (cityField.options[i].textContent.trim().toLowerCase() === 'kolkata') {
+                                    cityField.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
                     } else {
                         const option = document.createElement('option');
                         option.textContent = 'No cities found';
