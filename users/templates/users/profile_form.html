@@ -40,7 +40,7 @@
             {% endfor %}
 
             <!-- Two Column Row: Country & Pin/Zip with OK Button -->
-            <div class="grid grid-cols-3 gap-4 mb-4">
+            <div class="grid grid-cols-2 gap-4 mb-4">
                 <div class="col-span-1">
                     <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
                         {{ form.country.label }}
@@ -52,7 +52,7 @@
                     {% endif %}
                     {{ form.country|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" }}
                 </div>
-                <div class="col-span-1">
+                <div class="col-span-1 relative">
                     <label for="{{ form.pin_or_zip.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
                         {{ form.pin_or_zip.label }}
                     </label>
@@ -62,12 +62,13 @@
                     </div>
                     {% endif %}
                     {{ form.pin_or_zip|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
-                </div>
-                <div class="col-span-1 flex items-end">
-                    <!-- OK button to trigger postal lookup -->
-                    <button type="button" id="pin-ok-btn" class="px-3 py-2 bg-green-500 text-white rounded-md text-sm font-medium hover:bg-green-600">
-                        OK
-                    </button>
+
+                    <div class=" absolute right-0 top-0 mt-6">
+                        <!-- OK button to trigger postal lookup -->
+                        <button type="button" id="pin-ok-btn" class="px-3 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primarydark">
+                            OK
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -137,6 +138,22 @@
         const getCitiesUrl = "{% url 'users:get_cities' %}";
         const getLocationUrl = "{% url 'users:get_location_by_zip' %}";
 
+        function togglePinOkButton() {
+        if (pinField.value.trim() !== '') {
+            pinOkBtn.style.display = 'block';  // Show OK button
+        } else {
+            pinOkBtn.style.display = 'none';   // Hide OK button
+        }
+    }
+
+    // Call the toggle function when the page loads to set the initial state
+    togglePinOkButton();
+
+    // Add an event listener to the Pin/Zip field to check for changes
+    pinField.addEventListener('input', function() {
+        togglePinOkButton();  // Update visibility whenever the Pin/Zip value changes
+    });
+
         function updateStateOptions(countryCode) {
             if (!stateField) return;
             stateField.innerHTML = '';
@@ -168,7 +185,7 @@
                             if (!defaultFound && stateField.options.length > 0) {
                                 stateField.selectedIndex = 0;
                             }
-                            // Trigger city update for the auto-selected state
+                            // Trigger city update for the auto-selected state without forcing a city.
                             updateCityOptions(stateField.value);
                         }
                     } else {
@@ -186,7 +203,8 @@
                 });
         }
 
-        function updateCityOptions(stateValue) {
+        // Modified updateCityOptions to optionally force a city selection.
+        function updateCityOptions(stateValue, forcedCity) {
             if (!cityField) return;
             cityField.innerHTML = '';
             const loadingOption = document.createElement('option');
@@ -204,9 +222,26 @@
                             option.textContent = city;
                             cityField.appendChild(option);
                         });
-                        // If state is West Bengal, auto-select "Kolkata" if available.
-                        // if(!pinOkBtn){
-                        if (stateValue.trim().toLowerCase() === 'west bengal') {
+                        if (forcedCity) {
+                            let found = false;
+                            for (let i = 0; i < cityField.options.length; i++) {
+                                if (cityField.options[i].textContent.trim().toLowerCase() === forcedCity.trim().toLowerCase()) {
+                                    cityField.selectedIndex = i;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            // If forcedCity isn't in the list, add it and select it.
+                            if (!found) {
+                                const option = document.createElement('option');
+                                option.value = forcedCity;
+                                option.textContent = forcedCity;
+                                cityField.insertBefore(option, cityField.firstChild);
+                                cityField.selectedIndex = 0;
+                            }
+                        }
+                        // If no forced city and state is West Bengal, default to "Kolkata".
+                        else if (stateValue.trim().toLowerCase() === 'west bengal') {
                             for (let i = 0; i < cityField.options.length; i++) {
                                 if (cityField.options[i].textContent.trim().toLowerCase() === 'kolkata') {
                                     cityField.selectedIndex = i;
@@ -238,7 +273,7 @@
             }
         }
 
-        // Trigger lookup when OK button is clicked
+        // Trigger lookup when OK button is clicked.
         if (pinOkBtn) {
             pinOkBtn.addEventListener('click', function() {
                 const zipCode = pinField.value.trim();
@@ -248,7 +283,10 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.state && data.city) {
-                                // Update state dropdown if the returned state exists
+                                // console.log(data.state);
+                                // console.log(data.city);
+                                
+                                // Update state dropdown with the returned state.
                                 let stateFound = false;
                                 for (let i = 0; i < stateField.options.length; i++) {
                                     if (stateField.options[i].textContent.trim().toLowerCase() === data.state.trim().toLowerCase()) {
@@ -258,17 +296,8 @@
                                     }
                                 }
                                 if (stateFound) {
-                                    // Update city dropdown based on the selected state
-                                    updateCityOptions(stateField.value);
-                                    // After a short delay, auto-select the returned city if it exists.
-                                    setTimeout(() => {
-                                        for (let i = 0; i < cityField.options.length; i++) {
-                                            if (cityField.options[i].textContent.trim().toLowerCase() === data.city.trim().toLowerCase()) {
-                                                cityField.selectedIndex = i;
-                                                break;
-                                            }
-                                        }
-                                    }, 1000);
+                                    // Update city dropdown and force selection to the returned city.
+                                    updateCityOptions(stateField.value, data.city);
                                 }
                             }
                         })
@@ -279,7 +308,7 @@
             });
         }
 
-        // Update states and cities on country and state changes
+        // Update states and cities on country and state changes.
         if (countryField) {
             updateStateOptions(countryField.value);
             toggleGSTField();
@@ -291,9 +320,10 @@
         
         if (stateField) {
             stateField.addEventListener('change', function() {
+                // When state is changed manually, update cities without a forced city.
                 updateCityOptions(this.value);
             });
-            if(stateField.value) {
+            if (stateField.value) {
                 updateCityOptions(stateField.value);
             }
         }
