@@ -22,7 +22,7 @@ class Profile(models.Model):
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
     country = models.CharField(max_length=100)
-    pin_or_zip = models.IntegerField(max_length=7, blank=True)
+    pin_or_zip = models.CharField(max_length=7, blank=True)
     gst_id = models.CharField(max_length=20, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -48,6 +48,9 @@ def dashboard(request):
 @login_required
 def invoice_create(request):
     active_profile = Profile.objects.filter(user=request.user, is_active=True).first()
+    profiles = Profile.objects.filter(user=request.user)
+    customers = Invoice.objects.filter(profile=active_profile).values_list('customer_name', 'customer_email', 'customer_contact', 'customer_country', 'customer_zip', 'customer_state', 'customer_city').distinct().order_by('customer_name')
+    # print(customers)
     if not active_profile:
         messages.warning(request, 'Please set up and activate a business profile before creating invoices.')
         return redirect('users:profile_list')
@@ -80,7 +83,9 @@ def invoice_create(request):
         'form': form,
         'formset': formset,
         'title': 'Create Invoice',
-        'active_profile': active_profile
+        'active_profile': active_profile,
+        'profiles': profiles,
+        'customers': customers
     })
 
 @login_required
@@ -105,6 +110,8 @@ def invoice_detail(request, pk):
 @login_required
 def invoice_update(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk, profile__user=request.user)
+    profiles = Profile.objects.filter(user=request.user)
+    customers = Invoice.objects.filter(profile=invoice.profile).values_list('customer_name', flat=True).distinct().order_by('customer_name')
     if request.method == 'POST':
         # return JsonResponse({'data':request.POST})
         form = InvoiceForm(request.POST, instance=invoice)
@@ -133,7 +140,9 @@ def invoice_update(request, pk):
         'formset': formset,
         'invoice': invoice,
         'title': f'Edit Invoice #{invoice.invoice_id}',
-        'active_profile': invoice.profile
+        'active_profile': invoice.profile,
+        'profiles': profiles,
+        'customers': customers
     })
 
 @login_required
@@ -214,3 +223,16 @@ def customer_invoice_view(request, uuid):
         'total_amount': total_amount,
         'title': f'Invoice #{invoice.invoice_id}'
     })
+
+def invoice_profile_activate(request, pk):
+    if request.method == 'POST':
+        with transaction.atomic():
+            # First, deactivate all profiles for this user
+            Profile.objects.filter(user=request.user).update(is_active=False)
+            # Then activate the selected profile
+            profile = get_object_or_404(Profile, pk=pk, user=request.user)
+            profile.is_active = True
+            profile.save()
+            messages.success(request, f'Business profile "{profile.company_name}" is now active!')
+    # return redirect('templates/invoices/invoice_form')
+    return redirect(request.META.get('HTTP_REFERER', 'invoices:dashboard'))

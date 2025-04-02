@@ -27,8 +27,15 @@ class Invoice(models.Model):
     invoice_id = models.CharField(max_length=19, editable=False, unique=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     profile = models.ForeignKey(Profile, on_delete=models.PROTECT, related_name='invoices', null=True, blank=True)
+
     customer_name = models.CharField(max_length=100)
     customer_email = models.EmailField()
+    customer_contact = models.CharField(max_length=10, help_text="Numeric contact number (max 10 digits)", default="0000000000")
+    customer_country = models.CharField(max_length=50, blank=True)  
+    customer_zip = models.CharField(max_length=7, blank=True, help_text="Postal/Zip code")  
+    customer_state = models.CharField(max_length=50, blank=True)  
+    customer_city = models.CharField(max_length=50, blank=True) 
+
     billing_date = models.DateField(default=timezone.now)
     due_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -36,9 +43,9 @@ class Invoice(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD')
-    subtotal_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # stores total of items
-    gst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)         # GST percentage
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)    # final total including GST
+    subtotal_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)  
+    gst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)         
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)    
     is_sent = models.BooleanField(default=False, help_text='Indicates if the invoice has been sent to the customer')
 
     def __str__(self):
@@ -84,6 +91,7 @@ class InvoiceItem(models.Model):
     item = models.CharField(max_length=200)
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def save(self, *args, **kwargs):

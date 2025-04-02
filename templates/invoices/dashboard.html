@@ -223,7 +223,23 @@
                         {{ invoice.customer_name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${{ invoice.total_amount }}
+                        <span id="currency-symbol">
+                            {% if invoice.currency == 'INR' %}
+                            ₹
+                            {% elif invoice.currency == 'USD' %}
+                            $
+                            {% elif invoice.currency == 'EUR' %}
+                            €
+                            {% elif invoice.currency == 'GBP' %}
+                            £
+                            {% elif invoice.currency == 'JPY' %}
+                            ¥
+                            {% elif invoice.currency == 'AUD' %}
+                            AU$
+                            {% elif invoice.currency == 'CAD' %}
+                            CA$
+                            {% endif %}
+                        </span> {{ invoice.total_amount }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 

@@ -13,5 +13,6 @@ urlpatterns = [
     path('<int:pk>/edit/', views.invoice_update, name='edit'),
     path('<int:pk>/delete/', views.invoice_delete, name='delete'),
     path('<int:pk>/send/', views.send_invoice, name='send'),
+    path('<int:pk>/activate/', views.invoice_profile_activate, name='invoice_profile_activate'),
     path('view/<str:uuid>/', views.customer_invoice_view, name='customer_view'),
 ]
