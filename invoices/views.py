@@ -6,13 +6,15 @@ from django.conf import settings
 from django.contrib import messages
 from django.urls import reverse
 from django.utils.html import strip_tags
+from django.utils import timezone
 from .models import Invoice, InvoiceItem
 from .forms import InvoiceForm, InvoiceItemFormSet
 from users.models import Profile
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from decimal import Decimal
+from .utils import render_to_pdf
 
 
 @login_required
@@ -237,6 +239,46 @@ def customer_invoice_view(request, uuid):
         # Mark the invoice as paid
         invoice.status = 'completed'
         invoice.save()
+
+        # Set up email connection using company credentials
+        connection = get_connection(
+            host=settings.EMAIL_HOST,
+            port=settings.EMAIL_PORT,
+            username=invoice.profile.company_email,
+            password=invoice.profile.password,
+            use_tls=settings.EMAIL_USE_TLS,
+        )
+
+        # Prepare email content
+        payment_date = timezone.now().date()
+        email_html = render_to_string('invoices/payment_confirmation.html', {
+            'invoice': invoice,
+            'total_amount': total_amount,
+            'payment_date': payment_date,
+        })
+
+        # Send email to customer
+        send_mail(
+            subject=f'Payment Confirmation for Invoice #{invoice.invoice_id}',
+            message=strip_tags(email_html),
+            from_email=invoice.profile.company_email,
+            recipient_list=[invoice.customer_email],
+            html_message=email_html,
+            fail_silently=False,
+            connection=connection
+        )
+
+        # Send email to company
+        send_mail(
+            subject=f'Payment Received for Invoice #{invoice.invoice_id}',
+            message=strip_tags(email_html),
+            from_email=invoice.profile.company_email,
+            recipient_list=[invoice.profile.company_email],
+            html_message=email_html,
+            fail_silently=False,
+            connection=connection
+        )
+
         messages.success(request, 'Invoice marked as paid successfully.')
         # return redirect('invoices:detail', pk=invoice.pk)
         return render(request, 'invoices/customer_invoice_view.html', {
@@ -272,3 +314,44 @@ def invoice_profile_activate(request, pk):
             messages.success(request, f'Business profile "{profile.company_name}" is now active!')
     # return redirect('templates/invoices/invoice_form')
     return redirect(request.META.get('HTTP_REFERER', 'invoices:dashboard'))
+
+def invoice_pdf_view(request, invoice_id):
+    invoice = get_object_or_404(Invoice, invoice_id=invoice_id)
+    
+    # Calculate original subtotal (before discount)
+    original_subtotal = sum(item.quantity * item.unit_price for item in invoice.items.all())
+    
+    # Calculate total discount rate and discount amount from items
+    total_discount_rate = sum(int(item.discount) for item in invoice.items.all())
+    total_discount = sum(
+        (item.quantity * item.unit_price * item.discount) / Decimal('100')
+        for item in invoice.items.all()
+    )
+    
+    # Calculate subtotal after discount
+    subtotal = original_subtotal - total_discount
+    
+    # Calculate GST amount
+    gst_rate = invoice.gst_rate or Decimal('0')
+    gst_amount = (subtotal * gst_rate) / Decimal('100')
+    
+    # Calculate total amount
+    total_amount = subtotal + gst_amount
+
+    context = {
+        'invoice': invoice,
+        'original_subtotal': original_subtotal,
+        'total_discount': total_discount,
+        'total_discount_rate': total_discount_rate,
+        'gst_amount': gst_amount,
+        'total_amount': total_amount,
+    }
+    
+    pdf = render_to_pdf('invoices/customer_invoice_view.html', context)
+    if pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        filename = f"Invoice_{invoice.invoice_id}.pdf"
+        content = f"attachment; filename={filename}"
+        response['Content-Disposition'] = content
+        return response
+    return HttpResponse("PDF generation failed")

@@ -15,4 +15,5 @@ urlpatterns = [
     path('<int:pk>/send/', views.send_invoice, name='send'),
     path('<int:pk>/activate/', views.invoice_profile_activate, name='invoice_profile_activate'),
     path('view/<str:uuid>/', views.customer_invoice_view, name='customer_view'),
+    path('invoice/<str:invoice_id>/download/', views.invoice_pdf_view, name='download_invoice'),
 ]
