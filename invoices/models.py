@@ -53,7 +53,10 @@ class Invoice(models.Model):
 
     def calculate_total(self):
         # return sum(item.total_price for item in self.items.all())
-        return sum(item.total_price for item in self.items.all())
+        return sum(
+            item.quantity * item.unit_price * (1 - item.discount / 100)
+            for item in self.items.all()
+        )
 
     def update_total(self):
         # """Update total without triggering recursive saves"""

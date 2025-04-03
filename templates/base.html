@@ -27,7 +27,7 @@
 <body class="bg-gray-50">
     <!-- Navigation -->
     {% comment %} {% include 'components/users/navbar.html' %} {% endcomment %}
-    {% if not request.resolver_match.url_name in 'login,register,logout' %}
+    {% if not request.resolver_match.url_name in 'login,register,logout,customer_view' %}
     {% include 'components/users/navbar.html' %}
     {% endif %}
     <!-- Messages -->

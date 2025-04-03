@@ -12,6 +12,8 @@ from users.models import Profile
 from django.db import transaction
 from django.http import JsonResponse
 from django.db.models import Q
+from decimal import Decimal
+
 
 @login_required
 def dashboard(request):
@@ -92,17 +94,35 @@ def invoice_create(request):
 def invoice_detail(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk, profile__user=request.user)
 
-    subtotal = invoice.subtotal_amount or 0
-    gst_rate = invoice.gst_rate or 0
+    # Calculate original subtotal (before discounts)
+    original_subtotal = sum(item.quantity * item.unit_price for item in invoice.items.all())
+    
+    # Calculate total discount from InvoiceItem table
+    total_discount_rate = sum(int(item.discount) for item in invoice.items.all())
 
-    gst_amount = (subtotal * gst_rate) / 100
-
+    total_discount = sum(
+        (item.quantity * item.unit_price * item.discount) / Decimal('100')
+        for item in invoice.items.all()
+    )
+    
+    # Subtotal after discounts
+    subtotal = original_subtotal - total_discount or Decimal('0')
+    
+    # GST rate and amount
+    gst_rate = invoice.gst_rate or Decimal('0')
+    gst_amount = (subtotal * gst_rate) / Decimal('100')
+    
+    # Total amount
     total_amount = subtotal + gst_amount
 
     return render(request, 'invoices/invoice_detail.html', {
         'invoice': invoice,
+        'original_subtotal': original_subtotal,
+        'total_discount': total_discount,
+        'subtotal': subtotal,
         'gst_amount': gst_amount,
         'total_amount': total_amount,
+        'total_discount_rate': total_discount_rate,
         'title': f'Invoice #{invoice.invoice_id}'
     })
 
@@ -111,7 +131,7 @@ def invoice_detail(request, pk):
 def invoice_update(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk, profile__user=request.user)
     profiles = Profile.objects.filter(user=request.user)
-    customers = Invoice.objects.filter(profile=invoice.profile).values_list('customer_name', flat=True).distinct().order_by('customer_name')
+    # customers = Invoice.objects.filter(profile=invoice.profile).values_list('customer_name', flat=True).distinct().order_by('customer_name')
     if request.method == 'POST':
         # return JsonResponse({'data':request.POST})
         form = InvoiceForm(request.POST, instance=invoice)
@@ -142,7 +162,7 @@ def invoice_update(request, pk):
         'title': f'Edit Invoice #{invoice.invoice_id}',
         'active_profile': invoice.profile,
         'profiles': profiles,
-        'customers': customers
+        # 'customers': customers
     })
 
 @login_required
@@ -197,12 +217,20 @@ def send_invoice(request, pk):
 
 def customer_invoice_view(request, uuid):
     invoice = get_object_or_404(Invoice, invoice_id=uuid)
-    # if not invoice.is_sent:
-    #     invoice.is_sent = True
-    #     invoice.save()
-    subtotal = invoice.subtotal_amount or 0
-    gst_rate = invoice.gst_rate or 0
-    gst_amount = (subtotal * gst_rate) / 100
+    
+    original_subtotal = sum(item.quantity * item.unit_price for item in invoice.items.all())
+    total_discount_rate = sum(int(item.discount) for item in invoice.items.all())
+
+    total_discount = sum(
+        (item.quantity * item.unit_price * item.discount) / Decimal('100')
+        for item in invoice.items.all()
+    )
+
+    # Subtotal after discounts
+    subtotal = original_subtotal - total_discount or Decimal('0')
+    # subtotal = invoice.subtotal_amount or 0
+    gst_rate = invoice.gst_rate or Decimal('0')
+    gst_amount = (subtotal * gst_rate) / Decimal('100')
     total_amount = subtotal + gst_amount
 
     if request.method == 'POST' and 'mark_paid' in request.POST:
@@ -213,14 +241,22 @@ def customer_invoice_view(request, uuid):
         # return redirect('invoices:detail', pk=invoice.pk)
         return render(request, 'invoices/customer_invoice_view.html', {
             'invoice': invoice,
+            'original_subtotal': original_subtotal,
+            'total_discount': total_discount,
+            'subtotal': subtotal,
             'gst_amount': gst_amount,
             'total_amount': total_amount,
+            'total_discount_rate': total_discount_rate,
             'title': f'Invoice #{invoice.invoice_id}'
         })
     return render(request, 'invoices/customer_invoice_view.html', {
         'invoice': invoice,
+        'original_subtotal': original_subtotal,
+        'total_discount': total_discount,
+        'subtotal': subtotal,
         'gst_amount': gst_amount,
         'total_amount': total_amount,
+        'total_discount_rate': total_discount_rate,
         'title': f'Invoice #{invoice.invoice_id}'
     })
 

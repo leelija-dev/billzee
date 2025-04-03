@@ -491,6 +491,7 @@
     const symbol = currencySymbols[selectedCurrency] || '';
 
     const totalAfterDiscount = total - discount;
+    
 
     document.getElementById('subtotal-amount').textContent = `${symbol} ${total.toFixed(2)}`;
     document.getElementById('total_dic').textContent = `${symbol} ${discount.toFixed(2)}`;
@@ -501,7 +502,7 @@
             const gstText = document.getElementById('gstDropdownButton')?.textContent || '';
             const gstRate = parseFloat(gstText.replace('GST: ', '').replace('%', '')) || 0;
             const gstAmount = (totalAfterDiscount * gstRate) / 100;
-            const finalTotal = (totalAfterDiscount + gstAmount)- discount;
+            const finalTotal = (totalAfterDiscount + gstAmount);
 
             document.getElementById('gst-amount').textContent = `${symbol} ${gstAmount.toFixed(2)}`;
             document.getElementById('total-amount').textContent = `${symbol} ${finalTotal.toFixed(2)}`;
