@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.urls import reverse
 from django.utils.html import strip_tags
 from django.utils import timezone
-from .models import Invoice, InvoiceItem, Product
+from .models import Invoice, InvoiceItem, Product, InvoiceCustomer
 from .forms import InvoiceForm, InvoiceItemFormSet
 from users.models import Profile
 from django.db import transaction
@@ -356,6 +356,46 @@ def invoice_pdf_view(request, invoice_id):
         response['Content-Disposition'] = content
         return response
     return HttpResponse("PDF generation failed")
+
+# ---------- for invoice all customer ----------- #
+@login_required
+def customer_list(request):
+    customers = InvoiceCustomer.objects.all()
+    return render(request, 'customer/customer_list.html', {'customers': customers, 'title': 'Customer List'})
+
+@login_required
+def customer_edit(request, customer_id):
+    customer = get_object_or_404(InvoiceCustomer, pk=customer_id)
+    
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            # Update customer fields; ensure the keys match those sent from the modal
+            customer.customer_name = data.get('customer_name', customer.customer_name)
+            customer.customer_email = data.get('customer_email', customer.customer_email)
+            customer.customer_contact = data.get('customer_contact', customer.customer_contact)
+            customer.save()
+            messages.success(request, 'Product update successfully.')
+            return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'fail', 'message': 'Invalid JSON data.'})
+    else:
+        # Optionally, return current customer data for GET requests if needed
+        return JsonResponse({
+            'customer_name': customer.customer_name,
+            'customer_email': customer.customer_email,
+            'customer_contact': customer.customer_contact,
+        })
+
+@login_required
+def customer_delete(request, customer_id):
+    customer = get_object_or_404(InvoiceCustomer, pk=customer_id)
+    if request.method == 'POST':
+        customer.delete()
+        messages.success(request, 'Customer deleted successfully.')
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
 
 # --------- for product ------------ #
 @login_required

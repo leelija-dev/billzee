@@ -17,6 +17,11 @@ urlpatterns = [
     path('view/<str:uuid>/', views.customer_invoice_view, name='customer_view'),
     path('invoice/<str:invoice_id>/download/', views.invoice_pdf_view, name='download_invoice'),
     
+    # Invoice Customer Url
+    path('customer/', views.customer_list, name='customer_list'), 
+    path('customer/<str:customer_id>/edit/', views.customer_edit, name='customer_edit'),
+    path('customer/<str:customer_id>/delete/', views.customer_delete, name='customer_delete'),
+    
     # Product URLs
     path('products/', views.product_list, name='product_list'),
     path('products/<int:pk>/edit/', views.product_update, name='product_update'),

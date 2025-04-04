@@ -89,6 +89,20 @@ class Invoice(models.Model):
                 pass  # Allow creation without profile for now
         super().save(*args, **kwargs)
 
+        InvoiceCustomer.objects.update_or_create(
+            invoice=self,
+            defaults={
+                'customer_name': self.customer_name,
+                'customer_email': self.customer_email,
+                'customer_contact': self.customer_contact,
+                'customer_country': self.customer_country,
+                'customer_zip': self.customer_zip,
+                'customer_state': self.customer_state,
+                'customer_city': self.customer_city,
+            }
+        )
+
+
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, related_name='items', on_delete=models.CASCADE)
     item = models.CharField(max_length=200)
@@ -117,3 +131,16 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.item_name} - {self.item_price}"
+
+class InvoiceCustomer(models.Model):
+    invoice = models.OneToOneField(Invoice, on_delete=models.CASCADE, related_name='customer_info')
+    customer_name = models.CharField(max_length=100)
+    customer_email = models.EmailField()
+    customer_contact = models.CharField(max_length=10, help_text="Numeric contact number (max 10 digits)", default="0000000000")
+    customer_country = models.CharField(max_length=50, blank=True)
+    customer_zip = models.CharField(max_length=7, blank=True, help_text="Postal/Zip code")
+    customer_state = models.CharField(max_length=50, blank=True)
+    customer_city = models.CharField(max_length=50, blank=True)
+
+    def __str__(self):
+        return f"{self.customer_name} ({self.customer_email}) - Invoice #{self.invoice.invoice_id}"
