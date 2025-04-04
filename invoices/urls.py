@@ -16,4 +16,9 @@ urlpatterns = [
     path('<int:pk>/activate/', views.invoice_profile_activate, name='invoice_profile_activate'),
     path('view/<str:uuid>/', views.customer_invoice_view, name='customer_view'),
     path('invoice/<str:invoice_id>/download/', views.invoice_pdf_view, name='download_invoice'),
+    
+    # Product URLs
+    path('products/', views.product_list, name='product_list'),
+    path('products/<int:pk>/edit/', views.product_update, name='product_update'),
+    path('products/<int:pk>/delete/', views.product_delete, name='product_delete'),
 ]

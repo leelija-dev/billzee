@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail,  get_connection
@@ -7,7 +8,7 @@ from django.contrib import messages
 from django.urls import reverse
 from django.utils.html import strip_tags
 from django.utils import timezone
-from .models import Invoice, InvoiceItem
+from .models import Invoice, InvoiceItem, Product
 from .forms import InvoiceForm, InvoiceItemFormSet
 from users.models import Profile
 from django.db import transaction
@@ -355,3 +356,33 @@ def invoice_pdf_view(request, invoice_id):
         response['Content-Disposition'] = content
         return response
     return HttpResponse("PDF generation failed")
+
+# --------- for product ------------ #
+@login_required
+def product_list(request):
+    products = Product.objects.all()
+    return render(request, 'products/product_list.html', {'products': products, 'title': 'Products'})
+
+@login_required
+def product_update(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            product.item_name = data.get('item_name', product.item_name)
+            product.item_price = data.get('item_price', product.item_price)
+            product.save()
+            messages.success(request, 'Product update successfully.')
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+@login_required
+def product_delete(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        product.delete()
+        messages.success(request, 'Product deleted successfully.')
+        return redirect('invoices:product_list')
+    return JsonResponse({'status': 'error'}, status=400)

@@ -4,49 +4,56 @@
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Business Profiles</h1>
-        <a href="{% url 'users:profile_create' %}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
-            Create Profile
-        </a>
+        <div class="flex justify-end gap-8">
+            <a href="{% url 'invoices:dashboard' %}" class="text-sm text-gray-600 hover:text-gray-900 py-2 px-4">
+                ← Back to Dashboard
+            </a>
+            <a href="{% url 'users:profile_create' %}"
+                class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                Create Profile
+            </a>
+        </div>
     </div>
 
     {% if profiles %}
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {% for profile in profiles %}
-            <div class="bg-white rounded-lg shadow p-6 {% if profile.is_active %}border-2 border-blue-600{% endif %}">
-                <div class="flex justify-between items-start mb-4">
-                    <h2 class="text-xl font-semibold text-gray-900">{{ profile.company_name }}</h2>
-                    {% if profile.is_active %}
-                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">Active</span>
-                    {% endif %}
-                </div>
-                <div class="space-y-2 text-gray-600">
-                    <p><span class="font-medium">Email:</span> {{ profile.company_email }}</p>
-                    <p><span class="font-medium">Phone:</span> {{ profile.phone_number|default:"-" }}</p>
-                    <p><span class="font-medium">Address:</span> {{ profile.address|default:"-" }}</p>
-                </div>
-                <div class="mt-4 flex justify-between">
-                    <a href="{% url 'users:profile_edit' profile.pk %}" class="text-gray-600 hover:text-gray-900 font-medium">
-                        Edit
-                    </a>
-                    {% if not profile.is_active %}
-                    <form action="{% url 'users:profile_activate' profile.pk %}" method="post" class="inline">
-                        {% csrf_token %}
-                        <button type="submit" class="text-blue-600 hover:text-blue-800 font-medium">
-                            Make Active
-                        </button>
-                    </form>
-                    {% endif %}
-                </div>
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {% for profile in profiles %}
+        <div class="bg-white rounded-lg shadow p-6 {% if profile.is_active %}border-2 border-blue-600{% endif %}">
+            <div class="flex justify-between items-start mb-4">
+                <h2 class="text-xl font-semibold text-gray-900">{{ profile.company_name }}</h2>
+                {% if profile.is_active %}
+                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">Active</span>
+                {% endif %}
             </div>
-            {% endfor %}
+            <div class="space-y-2 text-gray-600">
+                <p><span class="font-medium">Email:</span> {{ profile.company_email }}</p>
+                <p><span class="font-medium">Phone:</span> {{ profile.phone_number|default:"-" }}</p>
+                <p><span class="font-medium">Address:</span> {{ profile.address|default:"-" }}</p>
+            </div>
+            <div class="mt-4 flex justify-between">
+                <a href="{% url 'users:profile_edit' profile.pk %}"
+                    class="text-gray-600 hover:text-gray-900 font-medium">
+                    Edit
+                </a>
+                {% if not profile.is_active %}
+                <form action="{% url 'users:profile_activate' profile.pk %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="text-blue-600 hover:text-blue-800 font-medium">
+                        Make Active
+                    </button>
+                </form>
+                {% endif %}
+            </div>
         </div>
+        {% endfor %}
+    </div>
     {% else %}
-        <div class="text-center py-12">
-            <p class="text-gray-600 mb-4">You haven't created any business profiles yet.</p>
-            <a href="{% url 'users:profile_create' %}" class="text-blue-500 hover:text-blue-600 font-medium">
-                Create your first profile
-            </a>
-        </div>
+    <div class="text-center py-12">
+        <p class="text-gray-600 mb-4">You haven't created any business profiles yet.</p>
+        <a href="{% url 'users:profile_create' %}" class="text-blue-500 hover:text-blue-600 font-medium">
+            Create your first profile
+        </a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

@@ -101,6 +101,19 @@ class InvoiceItem(models.Model):
         self.total_price = self.quantity * self.unit_price
         super().save(*args, **kwargs)
         self.invoice.update_total()  # Use the new method to update invoice total
+        # Create or update the corresponding Product entry
+        Product.objects.update_or_create(
+            invoice_item=self,
+            defaults={'item_name': self.item, 'item_price': self.unit_price}
+        )
 
     def __str__(self):
         return f"{self.item} - {self.invoice.invoice_id}"
+
+class Product(models.Model):
+    invoice_item = models.OneToOneField(InvoiceItem, on_delete=models.CASCADE, primary_key=True)
+    item_name = models.CharField(max_length=200)
+    item_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.item_name} - {self.item_price}"
