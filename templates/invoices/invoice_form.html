@@ -116,7 +116,15 @@
                     <p class="mt-2 text-sm text-red-600">{{ form.customer_contact.errors.0 }}</p>
                     {% endif %}
                 </div>
-                
+                <div>
+                    <label for="{{ form.customer_address.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Customer Address
+                    </label>
+                    {{ form.customer_address }}
+                    {% if form.customer_address.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.customer_address.errors.0 }}</p>
+                    {% endif %}
+                </div>
                 <!-- Customer Country -->
                 <div>
                     <label for="{{ form.customer_country.id_for_label }}" class="block text-sm font-medium text-gray-700">
@@ -331,6 +339,12 @@
                     {% endfor %}
                     {% endif %}
                 </div>
+                <!-- Datalist for Product Items -->
+                <datalist id="product-list">
+                    {% for product in products %}
+                        <option value="{{ product.0 }}">
+                    {% endfor %}
+                </datalist>
                 <div class="flex justify-end">
                     <button type="button" id="add-item"
                         class="flex items-center px-3 py-2 border border-blue-600 shadow-sm text-sm font-medium rounded-md text-white bg-blue-500  hover:bg-white hover:text-blue-600">
@@ -440,6 +454,14 @@
         'AUD': 'A$',
         'CAD': 'C$'
     };
+    
+    //--- fetch product data ---//
+    const productData = {
+        {% for product in products %}
+            "{{ product.0|escapejs }}": "{{ product.1 }}",
+        {% endfor %}
+    };
+
 
     function updateCurrencySymbols(currency) {
         const symbol = currencySymbols[currency];
@@ -448,6 +470,13 @@
             el.textContent = symbol;
         });
     }
+
+    //------- for item initialize -----//
+    function initializeItemInputs() {
+        document.querySelectorAll('input[name$="-item"]').forEach(input => {
+            input.setAttribute('list', 'product-list');
+        });
+    }  //----//
 
     document.getElementById('add-item').addEventListener('click', function () {
         const itemsContainer = document.getElementById('invoice-items');
@@ -459,7 +488,29 @@
         tempDiv.innerHTML = newFormHtml;
         itemsContainer.appendChild(tempDiv.firstElementChild);
         totalForms.value = formNum + 1;
+        initializeItemInputs();
     });
+
+    //------- autofill item price based on item -----//
+    document.getElementById('invoice-items').addEventListener('input', function(e) {
+        if (e.target.name && e.target.name.endsWith('-item')) {
+            const selectedItem = e.target.value;
+            if (productData.hasOwnProperty(selectedItem)) {
+                const price = productData[selectedItem];
+                const itemRow = e.target.closest('.invoice-item');
+                if (itemRow) {
+                    const unitPriceInput = itemRow.querySelector('input[name$="-unit_price"]');
+                    if (unitPriceInput) {
+                        unitPriceInput.value = price;
+                        unitPriceInput.dispatchEvent(new Event('input')); // Trigger total recalculation
+                    } else {
+                        console.log('Unit price input not found in this row');
+                    }
+                }
+            }
+        }
+    });
+
 
     function calculateTotal() {
     let total = 0;
@@ -675,6 +726,7 @@
             document.getElementById('gstDiv').classList.remove('hidden');
         }
         calculateTotal();
+        initializeItemInputs();
     });
 
 /// -------------for customer details autofill----------//
@@ -683,10 +735,11 @@
             "{{ customer.0|escapejs }}": {
                 email: "{{ customer.1|escapejs }}",
                 contact: "{{ customer.2|escapejs }}",
-                country: "{{ customer.3|escapejs }}",
-                zip: "{{ customer.4|escapejs }}",
-                state: "{{ customer.5|escapejs }}",
-                city: "{{ customer.6|escapejs }}",
+                address: "{{ customer.3|escapejs }}",
+                country: "{{ customer.4|escapejs }}",
+                zip: "{{ customer.5|escapejs }}",
+                state: "{{ customer.6|escapejs }}",
+                city: "{{ customer.7|escapejs }}",
             },
         {% endfor %}
     };
@@ -697,6 +750,7 @@
         if (customerData.hasOwnProperty(customerName)) {
             document.getElementById('id_customer_email').value = customerData[customerName].email;
             document.getElementById('id_customer_contact').value = customerData[customerName].contact;
+            document.getElementById('id_customer_address').value = customerData[customerName].address;
             document.getElementById('id_customer_country').value = customerData[customerName].country;
             document.getElementById('id_customer_zip').value = customerData[customerName].zip;
             document.getElementById('id_customer_state').value = customerData[customerName].state;
@@ -704,6 +758,7 @@
         } else {
             document.getElementById('id_customer_email').value = '';
             document.getElementById('id_customer_contact').value = '';
+            document.getElementById('id_customer_address').value = '';
             document.getElementById('id_customer_country').value = '';
             document.getElementById('id_customer_zip').value = '';
             document.getElementById('id_customer_state').value = '';

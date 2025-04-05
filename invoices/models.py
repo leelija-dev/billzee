@@ -31,6 +31,7 @@ class Invoice(models.Model):
     customer_name = models.CharField(max_length=100)
     customer_email = models.EmailField()
     customer_contact = models.CharField(max_length=10, help_text="Numeric contact number (max 10 digits)", default="0000000000")
+    customer_address = models.CharField(max_length=200, default="")
     customer_country = models.CharField(max_length=50, blank=True)  
     customer_zip = models.CharField(max_length=7, blank=True, help_text="Postal/Zip code")  
     customer_state = models.CharField(max_length=50, blank=True)  
@@ -89,18 +90,35 @@ class Invoice(models.Model):
                 pass  # Allow creation without profile for now
         super().save(*args, **kwargs)
 
-        InvoiceCustomer.objects.update_or_create(
-            invoice=self,
-            defaults={
-                'customer_name': self.customer_name,
-                'customer_email': self.customer_email,
-                'customer_contact': self.customer_contact,
-                'customer_country': self.customer_country,
-                'customer_zip': self.customer_zip,
-                'customer_state': self.customer_state,
-                'customer_city': self.customer_city,
-            }
-        )
+        # InvoiceCustomer.objects.update_or_create(
+        #     invoice=self,
+        #     defaults={
+        #         'customer_name': self.customer_name,
+        #         'customer_email': self.customer_email,
+        #         'customer_contact': self.customer_contact,
+        #         'customer_address': self.customer_address,
+        #         'customer_country': self.customer_country,
+        #         'customer_zip': self.customer_zip,
+        #         'customer_state': self.customer_state,
+        #         'customer_city': self.customer_city,
+        #     }
+        # )
+        customer_data = {
+            'customer_name': self.customer_name,
+            'customer_email': self.customer_email,
+            'customer_contact': self.customer_contact,
+            'customer_address': self.customer_address,
+            'customer_country': self.customer_country,
+            'customer_zip': self.customer_zip,
+            'customer_state': self.customer_state,
+            'customer_city': self.customer_city,
+        }
+        # Check if a customer with these details already exists
+        existing_customer = InvoiceCustomer.objects.filter(**customer_data).first()
+
+        # Only create a new InvoiceCustomer record if one does not already exist
+        if not existing_customer:
+            InvoiceCustomer.objects.create(invoice=self, **customer_data)
 
 
 class InvoiceItem(models.Model):
@@ -116,10 +134,21 @@ class InvoiceItem(models.Model):
         super().save(*args, **kwargs)
         self.invoice.update_total()  # Use the new method to update invoice total
         # Create or update the corresponding Product entry
-        Product.objects.update_or_create(
-            invoice_item=self,
-            defaults={'item_name': self.item, 'item_price': self.unit_price}
-        )
+        # Product.objects.update_or_create(
+        #     invoice_item=self,
+        #     defaults={'item_name': self.item, 'item_price': self.unit_price}
+        # )
+        product_data = {
+            'item_name': self.item,
+            'item_price': self.unit_price,
+        }
+
+        # Check if a product with the same details already exists
+        existing_product = Product.objects.filter(**product_data).first()
+
+        # Only create a new Product record if one does not already exist
+        if not existing_product:
+            Product.objects.create(invoice_item=self, **product_data)
 
     def __str__(self):
         return f"{self.item} - {self.invoice.invoice_id}"
@@ -137,6 +166,7 @@ class InvoiceCustomer(models.Model):
     customer_name = models.CharField(max_length=100)
     customer_email = models.EmailField()
     customer_contact = models.CharField(max_length=10, help_text="Numeric contact number (max 10 digits)", default="0000000000")
+    customer_address = models.CharField(max_length=200)
     customer_country = models.CharField(max_length=50, blank=True)
     customer_zip = models.CharField(max_length=7, blank=True, help_text="Postal/Zip code")
     customer_state = models.CharField(max_length=50, blank=True)

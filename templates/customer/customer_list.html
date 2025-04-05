@@ -33,7 +33,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ customer.customer_email }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ customer.customer_contact }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick="openEditModal('{% url 'invoices:customer_edit' customer.id %}', '{{ customer.customer_name|escapejs }}', '{{ customer.customer_email|escapejs }}', '{{ customer.customer_contact|escapejs }}', '{{ customer.customer_country|escapejs }}', '{{ customer.customer_zip|escapejs }}', '{{ customer.customer_state|escapejs }}', '{{ customer.customer_city|escapejs }}',)"
+                        <button onclick="openEditModal('{% url 'invoices:customer_edit' customer.id %}', '{{ customer.customer_name|escapejs }}', '{{ customer.customer_email|escapejs }}', '{{ customer.customer_contact|escapejs }}', '{{ customer.customer_country|escapejs }}', '{{ customer.customer_zip|escapejs }}', '{{ customer.customer_state|escapejs }}', '{{ customer.customer_city|escapejs }}', '{{ customer.customer_address|escapejs }}')"
                             data-modal-target="authentication-modal" data-modal-toggle="authentication-modal"
                             class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-1 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20"
@@ -128,39 +128,39 @@
                             required>
                     </div>
                     <div>
-                        <label for="modalCustomerCountry" class="block mb-2 text-sm font-medium text-gray-900">Contact</label>
-                        <input type="text" name="customer_country" id="modalCustomerCountry"
+                        <label for="modalCustomerAddress" class="block mb-2 text-sm font-medium text-gray-900">Address</label>
+                        <input type="text" name="customer_address" id="modalCustomerAddress"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                             required>
                     </div>
                 </div> 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label for="modalCustomerZip" class="block mb-2 text-sm font-medium text-gray-900">Contact</label>
-                        <input type="text" name="customer_zip" id="modalCustomerZip"
+                        <label for="modalCustomerCountry" class="block mb-2 text-sm font-medium text-gray-900">Country</label>
+                        <input type="text" name="customer_country" id="modalCustomerCountry"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                             required>
                     </div>
                     <div>
-                        <label for="modalCustomerState" class="block mb-2 text-sm font-medium text-gray-900">Contact</label>
-                        <input type="text" name="customer_state" id="modalCustomerState"
+                        <label for="modalCustomerZip" class="block mb-2 text-sm font-medium text-gray-900">Zip</label>
+                        <input type="text" name="customer_zip" id="modalCustomerZip"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                             required>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label for="modalCustomerCity" class="block mb-2 text-sm font-medium text-gray-900">Contact</label>
+                        <label for="modalCustomerState" class="block mb-2 text-sm font-medium text-gray-900">State</label>
+                        <input type="text" name="customer_state" id="modalCustomerState"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required>
+                    </div>
+                    <div>
+                        <label for="modalCustomerCity" class="block mb-2 text-sm font-medium text-gray-900">City</label>
                         <input type="text" name="customer_city" id="modalCustomerCity"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                             required>
                     </div>
-                    <!-- <div>
-                        <label for="modalCustomerState" class="block mb-2 text-sm font-medium text-gray-900">Contact</label>
-                        <input type="text" name="customer_state" id="modalCustomerState"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                            required>
-                    </div> -->
                 </div>
                     <button type="submit"
                         class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
@@ -174,7 +174,7 @@
 
 <script>
     // Update openEditModal to accept customer details.
-    function openEditModal(url, name, email, contact, country, zip, state, city) {
+    function openEditModal(url, name, email, contact, country, zip, state, city, address) {
         document.getElementById('modalCustomerName').value = name;
         document.getElementById('modalCustomerEmail').value = email;
         document.getElementById('modalCustomerContact').value = contact;
@@ -182,6 +182,7 @@
         document.getElementById('modalCustomerZip').value = zip;
         document.getElementById('modalCustomerState').value = state;
         document.getElementById('modalCustomerCity').value = city;
+        document.getElementById('modalCustomerAddress').value = address;
         const form = document.getElementById('editForm');
         form.action = url;
         document.getElementById('authentication-modal').classList.remove('hidden');
@@ -196,7 +197,12 @@
         const formData = {
             customer_name: document.getElementById('modalCustomerName').value,
             customer_email: document.getElementById('modalCustomerEmail').value,
-            customer_contact: document.getElementById('modalCustomerContact').value
+            customer_contact: document.getElementById('modalCustomerContact').value,
+            customer_address: document.getElementById('modalCustomerAddress').value,
+            customer_country: document.getElementById('modalCustomerCountry').value,
+            customer_zip: document.getElementById('modalCustomerZip').value,
+            customer_state: document.getElementById('modalCustomerState').value,
+            customer_city: document.getElementById('modalCustomerCity').value
         };
 
         fetch(e.target.action, {

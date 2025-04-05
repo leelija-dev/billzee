@@ -16,6 +16,7 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from decimal import Decimal
 from .utils import render_to_pdf
+from django.db.models import Max
 
 
 @login_required
@@ -54,8 +55,11 @@ def dashboard(request):
 def invoice_create(request):
     active_profile = Profile.objects.filter(user=request.user, is_active=True).first()
     profiles = Profile.objects.filter(user=request.user)
-    customers = Invoice.objects.filter(profile=active_profile).values_list('customer_name', 'customer_email', 'customer_contact', 'customer_country', 'customer_zip', 'customer_state', 'customer_city').distinct().order_by('customer_name')
+    customers = InvoiceCustomer.objects.all().values_list('customer_name', 'customer_email', 'customer_contact', 'customer_address', 'customer_country', 'customer_zip', 'customer_state', 'customer_city').distinct().order_by('customer_name')
     # print(customers)
+    latest_products = Product.objects.values('item_name').annotate(max_id=Max('invoice_item_id')).order_by()
+    products = Product.objects.filter(invoice_item_id__in=[p['max_id'] for p in latest_products]).values_list('item_name', 'item_price', flat=False).order_by('item_name')
+    # print(products)
     if not active_profile:
         messages.warning(request, 'Please set up and activate a business profile before creating invoices.')
         return redirect('users:profile_list')
@@ -90,7 +94,9 @@ def invoice_create(request):
         'title': 'Create Invoice',
         'active_profile': active_profile,
         'profiles': profiles,
-        'customers': customers
+        'customers': customers,
+        'products': products,
+        'latest_products': latest_products,
     })
 
 @login_required
@@ -374,6 +380,11 @@ def customer_edit(request, customer_id):
             customer.customer_name = data.get('customer_name', customer.customer_name)
             customer.customer_email = data.get('customer_email', customer.customer_email)
             customer.customer_contact = data.get('customer_contact', customer.customer_contact)
+            customer.customer_address = data.get('customer_address', customer.customer_address)
+            customer.customer_country = data.get('customer_country', customer.customer_country)
+            customer.customer_zip = data.get('customer_zip', customer.customer_zip)
+            customer.customer_state = data.get('customer_state', customer.customer_state)
+            customer.customer_city = data.get('customer_city', customer.customer_city)
             customer.save()
             messages.success(request, 'Product update successfully.')
             return JsonResponse({'status': 'success'})
@@ -385,6 +396,11 @@ def customer_edit(request, customer_id):
             'customer_name': customer.customer_name,
             'customer_email': customer.customer_email,
             'customer_contact': customer.customer_contact,
+            'customer_address': customer.customer_address,
+            'customer_country': customer.customer_country,
+            'customer_zip': customer.customer_zip,
+            'customer_state': customer.customer_state,
+            'customer_city': customer.customer_city,
         })
 
 @login_required

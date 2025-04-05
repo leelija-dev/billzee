@@ -5,7 +5,7 @@ from .models import Invoice, InvoiceItem
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['customer_name', 'customer_email', 'customer_contact', 'customer_country', 'customer_zip', 'customer_state', 'customer_city', 'billing_date', 'due_date', 'notes','status','gst_rate', 'currency']
+        fields = ['customer_name', 'customer_email', 'customer_contact', 'customer_address', 'customer_country', 'customer_zip', 'customer_state', 'customer_city', 'billing_date', 'due_date', 'notes','status','gst_rate', 'currency']
         widgets = {
             'customer_name': forms.TextInput(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm'
@@ -16,6 +16,9 @@ class InvoiceForm(forms.ModelForm):
             'customer_contact': forms.NumberInput(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm',
                 'min': '0'
+            }),
+            'customer_address': forms.TextInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm'
             }),
             'customer_country': forms.TextInput(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm'
@@ -57,7 +60,7 @@ class InvoiceItemForm(forms.ModelForm):
         model = InvoiceItem
         fields = ['item', 'quantity', 'unit_price', 'discount']
         widgets = {
-            'item': forms.TextInput(attrs={'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm', 'placeholder': 'Item Name'}),
+            'item': forms.TextInput(attrs={'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm', 'placeholder': 'Item Name', 'list': 'product-list'}),
             'quantity': forms.NumberInput(attrs={'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm', 'min': '1', 'placeholder': 'Quantity'}),
             'unit_price': forms.NumberInput(attrs={'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm', 'min': '0', 'step': '0.01', 'placeholder': 'Unit price'}),
             'discount': forms.NumberInput(attrs={'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm', 'min': '0', 'step': '0.01', 'placeholder': 'Discount %'})
