@@ -104,21 +104,23 @@ class Invoice(models.Model):
         #     }
         # )
         customer_data = {
-            'customer_name': self.customer_name,
             'customer_email': self.customer_email,
-            'customer_contact': self.customer_contact,
-            'customer_address': self.customer_address,
-            'customer_country': self.customer_country,
-            'customer_zip': self.customer_zip,
-            'customer_state': self.customer_state,
-            'customer_city': self.customer_city,
         }
-        # Check if a customer with these details already exists
+
         existing_customer = InvoiceCustomer.objects.filter(**customer_data).first()
 
-        # Only create a new InvoiceCustomer record if one does not already exist
         if not existing_customer:
-            InvoiceCustomer.objects.create(invoice=self, **customer_data)
+            InvoiceCustomer.objects.create(
+                invoice=self,
+                customer_name=self.customer_name,
+                customer_email=self.customer_email,
+                customer_contact=self.customer_contact,
+                customer_address=self.customer_address,
+                customer_country=self.customer_country,
+                customer_zip=self.customer_zip,
+                customer_state=self.customer_state,
+                customer_city=self.customer_city,
+            )
 
 
 class InvoiceItem(models.Model):
@@ -132,7 +134,7 @@ class InvoiceItem(models.Model):
     def save(self, *args, **kwargs):
         self.total_price = self.quantity * self.unit_price
         super().save(*args, **kwargs)
-        self.invoice.update_total()  # Use the new method to update invoice total
+        self.invoice.update_total()  
         # Create or update the corresponding Product entry
         # Product.objects.update_or_create(
         #     invoice_item=self,
@@ -140,7 +142,7 @@ class InvoiceItem(models.Model):
         # )
         product_data = {
             'item_name': self.item,
-            'item_price': self.unit_price,
+            # 'item_price': self.unit_price,
         }
 
         # Check if a product with the same details already exists
@@ -148,7 +150,11 @@ class InvoiceItem(models.Model):
 
         # Only create a new Product record if one does not already exist
         if not existing_product:
-            Product.objects.create(invoice_item=self, **product_data)
+            Product.objects.create(
+                invoice_item=self,
+                item_name=self.item,
+                item_price=self.unit_price
+                )
 
     def __str__(self):
         return f"{self.item} - {self.invoice.invoice_id}"

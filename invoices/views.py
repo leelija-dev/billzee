@@ -247,6 +247,21 @@ def customer_invoice_view(request, uuid):
         invoice.status = 'completed'
         invoice.save()
 
+        # Generate PDF
+        context = {
+            'invoice': invoice,
+            'original_subtotal': original_subtotal,
+            'total_discount': total_discount,
+            'total_discount_rate': total_discount_rate,
+            'gst_amount': gst_amount,
+            'total_amount': total_amount,
+        }
+        
+        pdf = render_to_pdf('invoices/customer_invoice_view.html', context)
+        
+        if not pdf:
+            return HttpResponse("PDF generation failed", status=500)
+
         # Set up email connection using company credentials
         connection = get_connection(
             host=settings.EMAIL_HOST,
@@ -258,6 +273,8 @@ def customer_invoice_view(request, uuid):
 
         # Prepare email content
         payment_date = timezone.now().date()
+        subject = f'Payment Confirmation for Invoice #{invoice.invoice_id}'
+        filename = f"Invoice_{invoice.invoice_id}.pdf"
         email_html = render_to_string('invoices/payment_confirmation.html', {
             'invoice': invoice,
             'total_amount': total_amount,
@@ -266,24 +283,30 @@ def customer_invoice_view(request, uuid):
 
         # Send email to customer
         send_mail(
-            subject=f'Payment Confirmation for Invoice #{invoice.invoice_id}',
+            subject=subject,
             message=strip_tags(email_html),
             from_email=invoice.profile.company_email,
             recipient_list=[invoice.customer_email],
             html_message=email_html,
             fail_silently=False,
-            connection=connection
+            connection=connection,
+            attachments=[  # CORRECTED: Remove .getvalue()
+                (filename, pdf, 'application/pdf')
+            ]
         )
 
         # Send email to company
         send_mail(
-            subject=f'Payment Received for Invoice #{invoice.invoice_id}',
+            subject=f'Payment Received - {subject}',
             message=strip_tags(email_html),
             from_email=invoice.profile.company_email,
             recipient_list=[invoice.profile.company_email],
             html_message=email_html,
             fail_silently=False,
-            connection=connection
+            connection=connection,
+            attachments=[  # CORRECTED: Remove .getvalue()
+                (filename, pdf, 'application/pdf')
+            ]
         )
 
         messages.success(request, 'Invoice marked as paid successfully.')

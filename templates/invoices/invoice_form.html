@@ -10,9 +10,9 @@
         <div class="">
             <h3 class="text-lg leading-6 font-medium text-gray-900">Active Business Profile</h3>
             <div class="flex justify-between gap-x-2">
-            <span class="bg-green-200 w-8/12 text-center rounded-sm align-middle px-1 ">{{ active_profile.company_name }}</span>
+            <span class="bg-green-200 {% if invoice.id %}w-12/12{% else %}w-8/12{% endif %} text-center rounded-sm align-middle px-1 ">{{ active_profile.company_name }}</span>
             <!-- <button class="bg-blue-600 p-1 px-1.5 rounded hover:bg-blue-800 text-white text-sm">Change</button> -->
-            <button data-modal-target="default-modal" data-modal-toggle="default-modal" class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-1.5 p-1 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
+            <button data-modal-target="default-modal" data-modal-toggle="default-modal" class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-1.5 p-1 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button" {% if invoice.id %} style="display: none;" {% endif %} >
                 Change
               </button>
             </div>
@@ -727,6 +727,16 @@
         }
         calculateTotal();
         initializeItemInputs();
+
+        // Disable customer details fields if editing
+        const isEditing = {% if invoice.id %}true{% else %}false{% endif %};
+        if (isEditing) {
+            document.querySelectorAll('input[name^="customer_"], textarea[name^="customer_"]').forEach(field => {
+                field.disabled = true;
+                field.style.background = '#d9d9d9';  
+                field.style.cursor = 'no-drop'; 
+            });
+        }
     });
 
 /// -------------for customer details autofill----------//
