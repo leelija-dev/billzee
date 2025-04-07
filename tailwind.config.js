@@ -3,7 +3,12 @@ module.exports = {
   content: [
     "./templates/**/*.html",
     "./static/**/*.js",
+    "./static/**/*.css",
+    "./static/**/*.html",
     "./node_modules/flowbite/**/*.js"
+  ],
+  safelist: [
+    "text-3xl", "bg-primary", "text-center", "py-4", "px-6", "rounded", "font-bold", "hover:bg-blue-700"
   ],
   theme: {
     extend: {

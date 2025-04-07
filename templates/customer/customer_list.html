@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+        <a href="{% url 'invoices:dashboard' %}" class="text-md text-blue-600 hover:text-gray-900">
+            ← Back to Dashboard
+        </a>
+    </div>
+    {% if customers %}
+    <div class="bg-white rounded-md shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-200">
+                <tr class="border-b-2 border-gray-900">
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">SL</th>
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Name</th>
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Email</th>
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Contact</th>
+                    <th scope="col"
+                        class="px-6 py-3 text-right text-xs font-medium text-gray-800 uppercase tracking-wider">Action</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for customer in customers %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ customer.id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ customer.customer_name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ customer.customer_email }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ customer.customer_contact }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="openEditModal('{% url 'invoices:customer_edit' customer.id %}', '{{ customer.customer_name|escapejs }}', '{{ customer.customer_email|escapejs }}', '{{ customer.customer_contact|escapejs }}', '{{ customer.customer_country|escapejs }}', '{{ customer.customer_zip|escapejs }}', '{{ customer.customer_state|escapejs }}', '{{ customer.customer_city|escapejs }}', '{{ customer.customer_address|escapejs }}')"
+                            data-modal-target="authentication-modal" data-modal-toggle="authentication-modal"
+                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-1 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path d="M17.414 2.586a2 2 0 010 2.828l-1.414 1.414-2.828-2.828 1.414-1.414a2 2 0 012.828 0zM2 13.414V18h4.586l8.486-8.486-4.586-4.586L2 13.414z" />
+                            </svg>
+                        </button>
+                        <form method="POST" action="" class="inline-block"
+                            onsubmit="return confirm('Are you sure?');">
+                            {% csrf_token %}
+                            <button type="submit"
+                                class="text-white p-1 font-medium rounded-lg text-sm bg-red-600 hover:bg-red-900 focus:ring-4 focus:outline-none focus:ring-red-300 text-center dark:bg-red-600 dark:hover:bg-red-900 dark:focus:ring-red-900"
+                                title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20"
+                                    fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M9 2a1 1 0 00-.894.553L7 4H4a1 1 0 000 2h1v10a2 2 0 002 2h6a2 2 0 002-2V6h1a1 1 0 100-2h-3l-.106-.447A1 1 0 0011 2H9zM7 6h6v10H7V6z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center text-center py-14 border-2 border-dashed border-blue-500 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="150" height="150" viewBox="0 0 256 256" xml:space="preserve">
+            <g style="stroke: none; fill: none;" transform="translate(1.41 1.41) scale(2.81)">
+                <polyline points="45,37.11 45,81.1 10.08,67 10.08,39.61 25.16,45.7 45,37.11" fill="#D9AC80"/>
+                <polygon points="45,37.11 45,81.1 79.92,67 79.92,39.61 55.08,49.64" fill="#926E43"/>
+                <polygon points="79.92,43.7 52.01,55.78 45,37.11 64.84,45.7 79.92,39.61" fill="#896642"/>
+                <polygon points="10.08,43.7 37.99,55.78 45,37.11 25.16,45.7 10.08,39.61" fill="#A67E4F"/>
+                <polygon points="45,37.11 45,8.9 10.08,23" fill="#A67E4F"/>
+                <polygon points="45,37.11 45,8.9 79.92,23" fill="#D9AC80"/>
+                <polygon points="34.92,49.64 0,35.53 10.08,23 45,37.11" fill="#D9AC80"/>
+                <polygon points="55.08,49.64 90,35.53 79.92,23 45,37.11" fill="#926E43"/>
+            </g>
+        </svg>
+        <h2 class="text-lg leading-6 font-medium text-red-500 mb-4">No customer found.</h2>
+    </div>    
+    {% endif %}
+</div>
+
+<!-- Edit Modal -->
+<div id="authentication-modal" tabindex="-1" aria-hidden="true"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-2xl max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    Edit Customer
+                </h3>
+                <button type="button"
+                    class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                    data-modal-hide="authentication-modal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="p-4 md:p-5">
+                <form id="editForm" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="modalCustomerName" class="block mb-2 text-sm font-medium text-gray-900">Name</label>
+                        <input type="text" name="customer_name" id="modalCustomerName"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required>
+                    </div>
+                    <div>
+                        <label for="modalCustomerEmail" class="block mb-2 text-sm font-medium text-gray-900">Email</label>
+                        <input type="text" name="customer_email" id="modalCustomerEmail"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required>
+                    </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="modalCustomerContact" class="block mb-2 text-sm font-medium text-gray-900">Contact</label>
+                        <input type="text" name="customer_contact" id="modalCustomerContact"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required>
+                    </div>
+                    <div>
+                        <label for="modalCustomerAddress" class="block mb-2 text-sm font-medium text-gray-900">Address</label>
+                        <input type="text" name="customer_address" id="modalCustomerAddress"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required>
+                    </div>
+                </div> 
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="modalCustomerCountry" class="block mb-2 text-sm font-medium text-gray-900">Country</label>
+                        <input type="text" name="customer_country" id="modalCustomerCountry"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required>
+                    </div>
+                    <div>
+                        <label for="modalCustomerZip" class="block mb-2 text-sm font-medium text-gray-900">Zip</label>
+                        <input type="text" name="customer_zip" id="modalCustomerZip"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="modalCustomerState" class="block mb-2 text-sm font-medium text-gray-900">State</label>
+                        <input type="text" name="customer_state" id="modalCustomerState"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required>
+                    </div>
+                    <div>
+                        <label for="modalCustomerCity" class="block mb-2 text-sm font-medium text-gray-900">City</label>
+                        <input type="text" name="customer_city" id="modalCustomerCity"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            required>
+                    </div>
+                </div>
+                    <button type="submit"
+                        class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                        Update Details
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update openEditModal to accept customer details.
+    function openEditModal(url, name, email, contact, country, zip, state, city, address) {
+        document.getElementById('modalCustomerName').value = name;
+        document.getElementById('modalCustomerEmail').value = email;
+        document.getElementById('modalCustomerContact').value = contact;
+        document.getElementById('modalCustomerCountry').value = country;
+        document.getElementById('modalCustomerZip').value = zip;
+        document.getElementById('modalCustomerState').value = state;
+        document.getElementById('modalCustomerCity').value = city;
+        document.getElementById('modalCustomerAddress').value = address;
+        const form = document.getElementById('editForm');
+        form.action = url;
+        document.getElementById('authentication-modal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('authentication-modal').classList.add('hidden');
+    }
+
+    document.getElementById('editForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = {
+            customer_name: document.getElementById('modalCustomerName').value,
+            customer_email: document.getElementById('modalCustomerEmail').value,
+            customer_contact: document.getElementById('modalCustomerContact').value,
+            customer_address: document.getElementById('modalCustomerAddress').value,
+            customer_country: document.getElementById('modalCustomerCountry').value,
+            customer_zip: document.getElementById('modalCustomerZip').value,
+            customer_state: document.getElementById('modalCustomerState').value,
+            customer_city: document.getElementById('modalCustomerCity').value
+        };
+
+        fetch(e.target.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify(formData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                closeEditModal();
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.message || 'Update failed'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred during update.');
+        });
+    });
+</script>
+{% endblock %}

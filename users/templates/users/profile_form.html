@@ -10,31 +10,109 @@
                 {% if profile %}Edit{% else %}Create{% endif %} Business Profile
             </h1>
             <a href="{% url 'users:profile_list' %}" class="text-sm text-gray-600 hover:text-gray-900">
-                &larr; Back to Profiles
+                ← Back to Profiles
             </a>
         </div>
 
         <form method="post" class="bg-white rounded-lg shadow p-6">
             {% csrf_token %}
             
+            <!-- Single Column Fields -->
             {% for field in form %}
-            <div class="mb-4">
-                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    {{ field.label }}
+                {% if field.name in 'company_name company_email password phone_number address' %}
+                <div class="mb-4">
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ field.label }}
+                    </label>
+                    {% if field.errors %}
+                    <div class="text-red-500 text-sm mb-2">
+                        {{ field.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="mt-1">
+                        {{ field|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+                    </div>
+                    {% if field.help_text %}
+                    <p class="mt-2 text-sm text-gray-500">{{ field.help_text }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+
+            <!-- Two Column Row: Country & Pin/Zip with OK Button -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="col-span-1">
+                    <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.country.label }}
+                    </label>
+                    {% if form.country.errors %}
+                    <div class="text-red-500 text-sm mb-2">
+                        {{ form.country.errors }}
+                    </div>
+                    {% endif %}
+                    {{ form.country|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" }}
+                </div>
+                <div class="col-span-1 relative">
+                    <label for="{{ form.pin_or_zip.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.pin_or_zip.label }}
+                    </label>
+                    {% if form.pin_or_zip.errors %}
+                    <div class="text-red-500 text-sm mb-2">
+                        {{ form.pin_or_zip.errors }}
+                    </div>
+                    {% endif %}
+                    {{ form.pin_or_zip|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+
+                    <div class=" absolute right-0 top-0 mt-6">
+                        <!-- OK button to trigger postal lookup -->
+                        <button type="button" id="pin-ok-btn" class="px-3 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-blue-600">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Two Column Row: City & State -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.state.label }}
+                    </label>
+                    {% if form.state.errors %}
+                    <div class="text-red-500 text-sm mb-2">
+                        {{ form.state.errors }}
+                    </div>
+                    {% endif %}
+                    {{ form.state|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" }}
+                </div>
+
+                <div>
+                    <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.city.label }}
+                    </label>
+                    {% if form.city.errors %}
+                    <div class="text-red-500 text-sm mb-2">
+                        {{ form.city.errors }}
+                    </div>
+                    {% endif %}
+                    {{ form.city|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" }}
+                </div>
+            </div>
+
+            <!-- Conditional GST Field -->
+            <div class="mb-4" id="gst-field-container" style="display: none;">
+                <label for="{{ form.gst_id.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.gst_id.label }}
                 </label>
-                {% if field.errors %}
+                {% if form.gst_id.errors %}
                 <div class="text-red-500 text-sm mb-2">
-                    {{ field.errors }}
+                    {{ form.gst_id.errors }}
                 </div>
                 {% endif %}
                 <div class="mt-1">
-                    {{ field|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
+                    {{ form.gst_id|addclass:"block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" }}
                 </div>
-                {% if field.help_text %}
-                <p class="mt-2 text-sm text-gray-500">{{ field.help_text }}</p>
-                {% endif %}
             </div>
-            {% endfor %}
 
             <div class="flex justify-end gap-4 mt-6">
                 <a href="{% url 'users:profile_list' %}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -47,4 +125,208 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const countryField = document.getElementById('id_country');
+        const stateField = document.getElementById('id_state');
+        const cityField = document.getElementById('id_city');
+        const pinField = document.getElementById('id_pin_or_zip');
+        const pinOkBtn = document.getElementById('pin-ok-btn');
+        const gstContainer = document.getElementById('gst-field-container');
+        const getStatesUrl = "{% url 'users:get_states' %}";
+        const getCitiesUrl = "{% url 'users:get_cities' %}";
+        const getLocationUrl = "{% url 'users:get_location_by_zip' %}";
+
+        function togglePinOkButton() {
+        if (pinField.value.trim() !== '') {
+            pinOkBtn.style.display = 'block';  // Show OK button
+        } else {
+            pinOkBtn.style.display = 'none';   // Hide OK button
+        }
+    }
+
+    // Call the toggle function when the page loads to set the initial state
+    togglePinOkButton();
+
+    // Add an event listener to the Pin/Zip field to check for changes
+    pinField.addEventListener('input', function() {
+        togglePinOkButton();  // Update visibility whenever the Pin/Zip value changes
+    });
+
+        function updateStateOptions(countryCode) {
+            if (!stateField) return;
+            stateField.innerHTML = '';
+            const loadingOption = document.createElement('option');
+            loadingOption.textContent = 'Loading states...';
+            stateField.appendChild(loadingOption);
+
+            fetch(`${getStatesUrl}?country=${countryCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    stateField.innerHTML = '';
+                    if (data.states) {
+                        data.states.forEach(stateName => {
+                            const option = document.createElement('option');
+                            option.value = stateName;
+                            option.textContent = stateName;
+                            stateField.appendChild(option);
+                        });
+                        // If country is India, auto-select "West Bengal" if available.
+                        if (countryCode.trim().toUpperCase() === 'IN') {
+                            let defaultFound = false;
+                            for (let i = 0; i < stateField.options.length; i++) {
+                                if (stateField.options[i].textContent.trim().toLowerCase() === 'west bengal') {
+                                    stateField.selectedIndex = i;
+                                    defaultFound = true;
+                                    break;
+                                }
+                            }
+                            if (!defaultFound && stateField.options.length > 0) {
+                                stateField.selectedIndex = 0;
+                            }
+                            // Trigger city update for the auto-selected state without forcing a city.
+                            updateCityOptions(stateField.value);
+                        }
+                    } else {
+                        const option = document.createElement('option');
+                        option.textContent = 'No states found';
+                        stateField.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching states:', error);
+                    stateField.innerHTML = '';
+                    const option = document.createElement('option');
+                    option.textContent = 'Error loading states';
+                    stateField.appendChild(option);
+                });
+        }
+
+        // Modified updateCityOptions to optionally force a city selection.
+        function updateCityOptions(stateValue, forcedCity) {
+            if (!cityField) return;
+            cityField.innerHTML = '';
+            const loadingOption = document.createElement('option');
+            loadingOption.textContent = 'Loading cities...';
+            cityField.appendChild(loadingOption);
+            const countryValue = countryField.value;
+            fetch(`${getCitiesUrl}?country=${countryValue}&state=${stateValue}`)
+                .then(response => response.json())
+                .then(data => {
+                    cityField.innerHTML = '';
+                    if (data.cities) {
+                        data.cities.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city;
+                            option.textContent = city;
+                            cityField.appendChild(option);
+                        });
+                        if (forcedCity) {
+                            let found = false;
+                            for (let i = 0; i < cityField.options.length; i++) {
+                                if (cityField.options[i].textContent.trim().toLowerCase() === forcedCity.trim().toLowerCase()) {
+                                    cityField.selectedIndex = i;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            // If forcedCity isn't in the list, add it and select it.
+                            if (!found) {
+                                const option = document.createElement('option');
+                                option.value = forcedCity;
+                                option.textContent = forcedCity;
+                                cityField.insertBefore(option, cityField.firstChild);
+                                cityField.selectedIndex = 0;
+                            }
+                        }
+                        // If no forced city and state is West Bengal, default to "Kolkata".
+                        else if (stateValue.trim().toLowerCase() === 'west bengal') {
+                            for (let i = 0; i < cityField.options.length; i++) {
+                                if (cityField.options[i].textContent.trim().toLowerCase() === 'kolkata') {
+                                    cityField.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        const option = document.createElement('option');
+                        option.textContent = 'No cities found';
+                        cityField.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching cities:', error);
+                    cityField.innerHTML = '';
+                    const option = document.createElement('option');
+                    option.textContent = 'Error loading cities';
+                    cityField.appendChild(option);
+                });
+        }
+
+        function toggleGSTField() {
+            const isIndia = countryField.value.trim().toUpperCase() === 'IN';
+            gstContainer.style.display = isIndia ? 'block' : 'none';
+            const gstInput = document.getElementById('id_gst_id');
+            if (gstInput) {
+                gstInput.required = isIndia;
+            }
+        }
+
+        // Trigger lookup when OK button is clicked.
+        if (pinOkBtn) {
+            pinOkBtn.addEventListener('click', function() {
+                const zipCode = pinField.value.trim();
+                const countryValue = countryField.value;
+                if (zipCode && countryValue) {
+                    fetch(`${getLocationUrl}?zip=${zipCode}&country=${countryValue}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.state && data.city) {
+                                // console.log(data.state);
+                                // console.log(data.city);
+                                
+                                // Update state dropdown with the returned state.
+                                let stateFound = false;
+                                for (let i = 0; i < stateField.options.length; i++) {
+                                    if (stateField.options[i].textContent.trim().toLowerCase() === data.state.trim().toLowerCase()) {
+                                        stateField.selectedIndex = i;
+                                        stateFound = true;
+                                        break;
+                                    }
+                                }
+                                if (stateFound) {
+                                    // Update city dropdown and force selection to the returned city.
+                                    updateCityOptions(stateField.value, data.city);
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching location by zip:', error);
+                        });
+                }
+            });
+        }
+
+        // Update states and cities on country and state changes.
+        if (countryField) {
+            updateStateOptions(countryField.value);
+            toggleGSTField();
+            countryField.addEventListener('change', function() {
+                toggleGSTField();
+                updateStateOptions(this.value);
+            });
+        }
+        
+        if (stateField) {
+            stateField.addEventListener('change', function() {
+                // When state is changed manually, update cities without a forced city.
+                updateCityOptions(this.value);
+            });
+            if (stateField.value) {
+                updateCityOptions(stateField.value);
+            }
+        }
+    });
+</script>
 {% endblock %}

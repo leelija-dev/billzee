@@ -20,12 +20,14 @@
             },
         };
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
     {% comment %} {% include 'components/users/navbar.html' %} {% endcomment %}
-    {% if not request.resolver_match.url_name in 'login,register,logout' %}
+    {% if not request.resolver_match.url_name in 'login,register,logout,customer_view' %}
     {% include 'components/users/navbar.html' %}
     {% endif %}
     <!-- Messages -->

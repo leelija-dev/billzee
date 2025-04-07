@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from .utils import get_country_choices
 
 class CustomUser(AbstractUser):
     company_name = models.CharField(max_length=100, blank=True)
@@ -18,6 +19,11 @@ class Profile(models.Model):
     password = models.CharField(max_length=128, default='')
     phone_number = models.CharField(max_length=20)
     address = models.TextField()
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100)
+    pin_or_zip = models.CharField(max_length=7, blank=True)
+    gst_id = models.CharField(max_length=20, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -30,11 +36,25 @@ class Profile(models.Model):
             )
         ]
 
+    # def save(self, *args, **kwargs):
+    #     if self.is_active:
+    #         # Set all other profiles of this user to inactive
+    #         Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(is_active=False)
+    #     super().save(*args, **kwargs)
+
+    # def __str__(self):
+    #     return f"{self.company_name} - {self.user.username}"
     def save(self, *args, **kwargs):
         if self.is_active:
-            # Set all other profiles of this user to inactive
             Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(is_active=False)
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.company_name} - {self.user.username}"
+
+    def get_country_display(self):
+        choices = get_country_choices()
+        for code, name in choices:
+            if code == self.country:
+                return name
+        return self.country

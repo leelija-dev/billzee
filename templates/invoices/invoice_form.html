@@ -5,21 +5,98 @@
 {% block content %}
 <div class="bg-white shadow sm:rounded-lg mb-10">
     <div class="px-4 py-5 sm:p-6">
+        <div class="flex justify-between">
         <h2 class="text-lg font-medium text-gray-900">{{ title }}</h2>
-        <form id="invoice-form" method="post" class="mt-5 space-y-6">
+        <div class="">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Active Business Profile</h3>
+            <div class="flex justify-between gap-x-2">
+            <span class="bg-green-200 {% if invoice.id %}w-12/12{% else %}w-8/12{% endif %} text-center rounded-sm align-middle px-1 ">{{ active_profile.company_name }}</span>
+            <!-- <button class="bg-blue-600 p-1 px-1.5 rounded hover:bg-blue-800 text-white text-sm">Change</button> -->
+            <button data-modal-target="default-modal" data-modal-toggle="default-modal" class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-1.5 p-1 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button" {% if invoice.id %} style="display: none;" {% endif %} >
+                Change
+              </button>
+            </div>
+
+            <!--profile change modal -->
+            <div id="default-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                <div class="relative p-4 w-full max-w-2xl max-h-full">
+                    <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+                        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                                Select Business Profile
+                            </h3>
+                            <button type="button" class="text-red-600 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="default-modal">
+                                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                </svg>
+                                <span class="sr-only">Close modal</span>
+                            </button>
+                        </div>
+                        <div class="p-4 md:p-5 space-y-4">
+                            {% if profiles %}
+                                {% for profile in profiles %}
+                                    {% if profile.is_active %}
+                                        <!-- Active Profile -->
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-lg font-medium text-gray-900 dark:text-white">{{ profile.company_name }}</span>
+                                            <span class="bg-green-200 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Active</span>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                        
+                                <hr class="my-3 border-gray-300">
+                        
+                                {% for profile in profiles %}
+                                    {% if not profile.is_active %}
+                                        <!-- Inactive Profiles -->
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-lg font-medium text-gray-900 dark:text-white">{{ profile.company_name }}</span>
+                                            <form method="post" action="{% url 'invoices:invoice_profile_activate' profile.pk %}">
+                                                {% csrf_token %}
+                                                <button type="submit" onclick="return confirm('Are you sure you want to switch profiles?')" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2 py-1 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                                    Set as Active
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-gray-900 dark:text-white">No profiles available.</p>
+                            {% endif %}
+                        </div>                        
+                        <!-- Modal footer -->
+                        <div class="flex justify-between items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
+                            <button data-modal-hide="default-modal" type="button" class="py-1 px-2 ms-3 text-sm font-medium text-white focus:outline-none bg-red-600 rounded-lg border border-red-600 hover:bg-gray-100 hover:text-blue-700 hover:border-red-600">
+                                Close
+                            </button>
+                            <a href="{% url 'users:profile_create' %}" class="bg-green-600 hover:bg-blue-600 text-white font-semibold py-1 px-2 rounded">
+                                Create New Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        <form id="invoice-form" method="post" class="mt-2 space-y-6">
             {% csrf_token %}
 
-            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+            <div class="grid grid-cols-3 gap-4 sm:grid-cols-1 sm:gap-1">
                 <div>
                     <label for="{{ form.customer_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
                         Customer Name
                     </label>
                     {{ form.customer_name }}
+                    <datalist id="customers-list">
+                        {% for customer in customers %}
+                        <option value="{{ customer.0}}">
+                        </option>
+                        {% endfor %}
+                    </datalist>
                     {% if form.customer_name.errors %}
                     <p class="mt-2 text-sm text-red-600">{{ form.customer_name.errors.0 }}</p>
                     {% endif %}
                 </div>
-
                 <div>
                     <label for="{{ form.customer_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
                         Customer Email
@@ -29,7 +106,66 @@
                     <p class="mt-2 text-sm text-red-600">{{ form.customer_email.errors.0 }}</p>
                     {% endif %}
                 </div>
-
+                <!-- Customer Contact -->
+                <div>
+                    <label for="{{ form.customer_contact.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Customer Contact
+                    </label>
+                    {{ form.customer_contact }}
+                    {% if form.customer_contact.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.customer_contact.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.customer_address.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Customer Address
+                    </label>
+                    {{ form.customer_address }}
+                    {% if form.customer_address.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.customer_address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <!-- Customer Country -->
+                <div>
+                    <label for="{{ form.customer_country.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Customer Country
+                    </label>
+                    {{ form.customer_country }}
+                    {% if form.customer_country.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.customer_country.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <!-- Customer Zip -->
+                <div>
+                    <label for="{{ form.customer_zip.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Customer Zip
+                    </label>
+                    {{ form.customer_zip }}
+                    {% if form.customer_zip.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.customer_zip.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <!-- Customer State -->
+                <div>
+                    <label for="{{ form.customer_state.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Customer State
+                    </label>
+                    {{ form.customer_state }}
+                    {% if form.customer_state.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.customer_state.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Customer City -->
+                <div>
+                    <label for="{{ form.customer_city.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Customer City
+                    </label>
+                    {{ form.customer_city }}
+                    {% if form.customer_city.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.customer_city.errors.0 }}</p>
+                    {% endif %}
+                </div>
                 <div>
                     <label for="{{ form.billing_date.id_for_label }}" class="block text-sm font-medium text-gray-700">
                         Billing Date
@@ -69,8 +205,8 @@
                     <div class="flex justify-end gap-x-4">
                         <div class="relative inline-block text-left">
                             <button id="dropdownButton" type="button"
-                                class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                                aria-expanded="true" aria-haspopup="true">
+                                class="inline-flex justify-center w-full rounded-md bg-green-200 shadow-sm px-4 py-2 text-sm font-medium hover:border-green-500 focus:outline-none"
+                                aria-expanded="true" aria-haspopup="true" title="Change currency">
                                 Currency
                                 <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
                                     fill="currentColor" aria-hidden="true">
@@ -81,7 +217,7 @@
                             </button>
 
                             <div id="dropdownMenu"
-                                class="origin-top-right absolute right-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
+                                class="origin-top-right absolute right-0 mt-2 rounded-md shadow-lg bg-white text-amber-500 ring-1 ring-black ring-opacity-5 hidden z-10">
                                 <div class="py-1" role="menu" aria-orientation="vertical"
                                     aria-labelledby="dropdownButton">
                                     <a href="#"
@@ -111,8 +247,8 @@
 
                         <div id="gstDropdownContainer" class="relative text-left hidden">
                             <button id="gstDropdownButton" type="button"
-                                class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                                aria-expanded="true" aria-haspopup="true">
+                                class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-blue-300 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none"
+                                aria-expanded="true" aria-haspopup="true" title="Add GST">
                                 GST: 0%
                                 <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
                                     fill="currentColor" aria-hidden="true">
@@ -145,7 +281,7 @@
                 </div>
                 {% endif %}
 
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3 mb-2">
+                <div class="grid grid-cols-4 gap-y-6 gap-x-3 sm:grid-cols-4 mt-1 bg-gray-300 p-3 pl-4 ">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Item</label>
                     </div>
@@ -156,6 +292,10 @@
                         <label class="block text-sm font-medium text-gray-700">Unit Price (<span
                                 id="currency-symbol">$</span>)</label>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Discount (<span
+                           >%</span>)</label>
+                    </div>
                 </div>
 
                 <div id="invoice-items">
@@ -163,7 +303,7 @@
                     {% for form in formset %}
                     <div class="invoice-item border-b rounded p-4 mb-4">
                         {{ form.id }}
-                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
+                        <div class="grid grid-cols-4 gap-y-6 gap-x-4 sm:grid-cols-4">
                             <div>
                                 {{ form.item }}
                                 {% if form.item.errors %}
@@ -182,27 +322,39 @@
                                 <p class="mt-2 text-sm text-red-600">{{ form.unit_price.errors.0 }}</p>
                                 {% endif %}
                             </div>
+                            <div>
+                                {{ form.discount }}
+                                {% if form.discount.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.discount.errors.0 }}</p>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="mt-2">
+                        <div class="mt-2 flex justify-end">
                             <label class="inline-flex items-center">
                                 {{ form.DELETE }}
-                                <span class="ml-2 text-sm text-gray-600">Delete this item</span>
+                                <span class="ml-2 text-sm text-red-600">Delete this item</span>
                             </label>
                         </div>
                     </div>
                     {% endfor %}
                     {% endif %}
                 </div>
-
-                <button type="button" id="add-item"
-                    class="mt-4 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Add Item
-                </button>
-
+                <!-- Datalist for Product Items -->
+                <datalist id="product-list">
+                    {% for product in products %}
+                        <option value="{{ product.0 }}">
+                    {% endfor %}
+                </datalist>
+                <div class="flex justify-end">
+                    <button type="button" id="add-item"
+                        class="flex items-center px-3 py-2 border border-blue-600 shadow-sm text-sm font-medium rounded-md text-white bg-blue-500  hover:bg-white hover:text-blue-600">
+                        Add Item
+                    </button>
+                </div>
                 <div id="empty-form-template" class="hidden">
                     <div class="invoice-item border-b rounded p-4 mb-4">
                         {{ formset.empty_form.id }}
-                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
+                        <div class="grid grid-cols-4 gap-y-6 gap-x-4 sm:grid-cols-4">
                             <div>
                                 {{ formset.empty_form.item }}
                             </div>
@@ -212,13 +364,16 @@
                             <div>
                                 {{ formset.empty_form.unit_price }}
                             </div>
-                            <div class="mt-2">
-                                <label class="inline-flex items-center">
-                                    {{ formset.empty_form.DELETE }}
-                                    <span class="ml-2 text-sm text-gray-600">Delete this item</span>
-                                </label>
+                            <div>
+                                {{ formset.empty_form.discount }}
                             </div>
                         </div>
+                            <div class="mt-2 flex justify-end">
+                                <label class="inline-flex items-center">
+                                    {{ formset.empty_form.DELETE }}
+                                    <span class="ml-2 text-sm text-red-600">Delete this item</span>
+                                </label>
+                            </div>
                     </div>
                 </div>
             </div>
@@ -231,17 +386,21 @@
                 </div>
 
                 <div class="flex justify-end align-baseline space-x-3 relative">
+                    <div class="flex gap-x-4 text-white align-middle mt-2">
+                        <p>Total Discount : </p>
+                        <p class="text-lg font-bold" id="total_dic"></p>
+                    </div>
+                    <div id="subtotalDiv" class="flex gap-x-4 text-white align-middle mt-2">
+                        <p>Subtotal : </p>
+                        <p class="text-lg font-bold" id="subtotal-amount"></p>
+                    </div>
                     <div id="gstDiv" class="flex gap-x-4 text-white align-middle mt-2 hidden">
                         <p>GST : </p>
-                        <p id="gst-amount"></p>
-                    </div>
-                    <div id="subtotalDiv" class="flex gap-x-4 text-white align-middle mt-2 hidden">
-                        <p>Subtotal : </p>
-                        <p id="subtotal-amount"></p>
+                        <p class="text-lg font-bold" id="gst-amount"></p>
                     </div>
                     <div class="flex gap-x-4 text-white align-middle mt-2">
                         <p>Total amount : </p>
-                        <p id="total-amount"></p>
+                        <p class="text-lg font-bold" id="total-amount"></p>
                     </div>
                     <p id="status-error" class="-top-10 left-0 text-sm bg-red-500 text-white shadow rounded-md border-gray-500 p-2 absolute hidden">Please select a status.</p>
                     <div class="relative inline-block text-left">
@@ -295,6 +454,14 @@
         'AUD': 'A$',
         'CAD': 'C$'
     };
+    
+    //--- fetch product data ---//
+    const productData = {
+        {% for product in products %}
+            "{{ product.0|escapejs }}": "{{ product.1 }}",
+        {% endfor %}
+    };
+
 
     function updateCurrencySymbols(currency) {
         const symbol = currencySymbols[currency];
@@ -303,6 +470,13 @@
             el.textContent = symbol;
         });
     }
+
+    //------- for item initialize -----//
+    function initializeItemInputs() {
+        document.querySelectorAll('input[name$="-item"]').forEach(input => {
+            input.setAttribute('list', 'product-list');
+        });
+    }  //----//
 
     document.getElementById('add-item').addEventListener('click', function () {
         const itemsContainer = document.getElementById('invoice-items');
@@ -314,49 +488,114 @@
         tempDiv.innerHTML = newFormHtml;
         itemsContainer.appendChild(tempDiv.firstElementChild);
         totalForms.value = formNum + 1;
+        initializeItemInputs();
     });
 
+    //------- autofill item price based on item -----//
+    document.getElementById('invoice-items').addEventListener('input', function(e) {
+        if (e.target.name && e.target.name.endsWith('-item')) {
+            const selectedItem = e.target.value;
+            if (productData.hasOwnProperty(selectedItem)) {
+                const price = productData[selectedItem];
+                const itemRow = e.target.closest('.invoice-item');
+                if (itemRow) {
+                    const unitPriceInput = itemRow.querySelector('input[name$="-unit_price"]');
+                    if (unitPriceInput) {
+                        unitPriceInput.value = price;
+                        unitPriceInput.dispatchEvent(new Event('input')); // Trigger total recalculation
+                    } else {
+                        console.log('Unit price input not found in this row');
+                    }
+                }
+            }
+        }
+    });
+
+
     function calculateTotal() {
-        let total = 0;
-        document.querySelectorAll('.invoice-item').forEach(item => {
-            const quantityInput = item.querySelector('input[name$="-quantity"]');
-            const unitPriceInput = item.querySelector('input[name$="-unit_price"]');
-            const deleteCheckbox = item.querySelector('input[name$="-DELETE"]');
+    let total = 0;
+    let discount = 0;
+
+    document.querySelectorAll('.invoice-item').forEach(item => {
+        if (item.style.display === 'none') return;
+        const quantityInput = item.querySelector('input[name$="-quantity"]');
+        const unitPriceInput = item.querySelector('input[name$="-unit_price"]');
+        const deleteCheckbox = item.querySelector('input[name$="-DELETE"]');
+        const discountInput = item.querySelector('input[name$="-discount"]');
+
+        if (quantityInput && unitPriceInput && discountInput && deleteCheckbox) {
             if (!deleteCheckbox.checked) {
                 const quantity = parseFloat(quantityInput.value) || 0;
                 const unitPrice = parseFloat(unitPriceInput.value) || 0;
-                total += quantity * unitPrice;
+                const discountRate = parseFloat(discountInput.value) || 0;
+
+                const itemTotal = quantity * unitPrice;
+                total += itemTotal;
+                discount += (itemTotal * discountRate) / 100;
             }
-        });
-        
-        const selectedCurrency = document.getElementById('currency-input').value;
-        const symbol = currencySymbols[selectedCurrency];
+        }
+    });
+
+    // console.log("Total Discount:", discount.toFixed(2));
+
+    const selectedCurrency = document.getElementById('currency-input').value;
+    const symbol = currencySymbols[selectedCurrency] || '';
+
+    const totalAfterDiscount = total - discount;
+    
+
+    document.getElementById('subtotal-amount').textContent = `${symbol} ${total.toFixed(2)}`;
+    document.getElementById('total_dic').textContent = `${symbol} ${discount.toFixed(2)}`;
+    document.getElementById('subtotal-input').value = `${symbol} ${total.toFixed(2)}`;
+
+    // ---GST Calculation only for INR---//
         if (selectedCurrency === 'INR') {
-            const gstText = document.getElementById('gstDropdownButton').textContent;
+            const gstText = document.getElementById('gstDropdownButton')?.textContent || '';
             const gstRate = parseFloat(gstText.replace('GST: ', '').replace('%', '')) || 0;
-            const gstAmount = (total * gstRate) / 100;
-            const finalTotal = total + gstAmount;
-            document.getElementById('subtotal-amount').textContent = `${symbol} ${total.toFixed(2)}`;
+            const gstAmount = (totalAfterDiscount * gstRate) / 100;
+            const finalTotal = (totalAfterDiscount + gstAmount);
+
             document.getElementById('gst-amount').textContent = `${symbol} ${gstAmount.toFixed(2)}`;
             document.getElementById('total-amount').textContent = `${symbol} ${finalTotal.toFixed(2)}`;
             document.getElementById('gst-input').value = gstRate;
-            document.getElementById('subtotal-input').value = total.toFixed(2);
         } else {
-            document.getElementById('total-amount').textContent = `${symbol} ${total.toFixed(2)}`;
+            document.getElementById('gst-amount').textContent = `${symbol} 0.00`;
             document.getElementById('gst-input').value = 0;
-            document.getElementById('subtotal-input').value = total.toFixed(2);
+            document.getElementById('total-amount').textContent = `${symbol} ${totalAfterDiscount.toFixed(2)}`;
         }
     }
 
+
     document.addEventListener('input', function(e) {
-        if (e.target.matches('input[name$="-quantity"]') || e.target.matches('input[name$="-unit_price"]')) {
+        if (e.target.matches('input[name$="-quantity"]') || 
+            e.target.matches('input[name$="-unit_price"]') || 
+            e.target.matches('input[name$="-discount"]')) {
             calculateTotal();
         }
     });
 
+    function handleDeleteItem(e) {
+    const deleteCheckbox = e.target;
+    const itemRow = deleteCheckbox.closest('.invoice-item');
+    
+        if (deleteCheckbox.checked) {
+            // Add fade-out animation
+            itemRow.style.opacity = '1';
+            let opacity = 1;
+            const fadeOut = setInterval(() => {
+                if (opacity <= 0) {
+                    clearInterval(fadeOut);
+                    itemRow.style.display = 'none';
+                }
+                itemRow.style.opacity = opacity;
+                opacity -= 0.1;
+            }, 30);
+        }
+        calculateTotal();
+    }
     document.addEventListener('change', function(e) {
         if (e.target.matches('input[name$="-DELETE"]')) {
-            calculateTotal();
+            handleDeleteItem(e);
         }
     });
 
@@ -408,11 +647,11 @@
             const gstDiv = document.getElementById('gstDiv');
             if (selectedCurrency === 'INR') {
                 gstOption.classList.remove('hidden');
-                subTotalDiv.classList.remove('hidden');
+                // subTotalDiv.classList.remove('hidden');
                 gstDiv.classList.remove('hidden');
             } else {
                 gstOption.classList.add('hidden');
-                subTotalDiv.classList.add('hidden');
+                // subTotalDiv.classList.remove('hidden');
                 gstDiv.classList.add('hidden');
                 document.getElementById('gst-input').value = 0;
                 document.getElementById('gstDropdownButton').textContent = 'GST: 0%';
@@ -487,6 +726,54 @@
             document.getElementById('gstDiv').classList.remove('hidden');
         }
         calculateTotal();
+        initializeItemInputs();
+
+        // Disable customer details fields if editing
+        const isEditing = {% if invoice.id %}true{% else %}false{% endif %};
+        if (isEditing) {
+            document.querySelectorAll('input[name^="customer_"], textarea[name^="customer_"]').forEach(field => {
+                field.disabled = true;
+                field.style.background = '#d9d9d9';  
+                field.style.cursor = 'no-drop'; 
+            });
+        }
+    });
+
+/// -------------for customer details autofill----------//
+    const customerData = {
+        {% for customer in customers %}
+            "{{ customer.0|escapejs }}": {
+                email: "{{ customer.1|escapejs }}",
+                contact: "{{ customer.2|escapejs }}",
+                address: "{{ customer.3|escapejs }}",
+                country: "{{ customer.4|escapejs }}",
+                zip: "{{ customer.5|escapejs }}",
+                state: "{{ customer.6|escapejs }}",
+                city: "{{ customer.7|escapejs }}",
+            },
+        {% endfor %}
+    };
+
+    
+    document.getElementById('id_customer_name').addEventListener('input', function(e) {
+        const customerName = e.target.value;
+        if (customerData.hasOwnProperty(customerName)) {
+            document.getElementById('id_customer_email').value = customerData[customerName].email;
+            document.getElementById('id_customer_contact').value = customerData[customerName].contact;
+            document.getElementById('id_customer_address').value = customerData[customerName].address;
+            document.getElementById('id_customer_country').value = customerData[customerName].country;
+            document.getElementById('id_customer_zip').value = customerData[customerName].zip;
+            document.getElementById('id_customer_state').value = customerData[customerName].state;
+            document.getElementById('id_customer_city').value = customerData[customerName].city;
+        } else {
+            document.getElementById('id_customer_email').value = '';
+            document.getElementById('id_customer_contact').value = '';
+            document.getElementById('id_customer_address').value = '';
+            document.getElementById('id_customer_country').value = '';
+            document.getElementById('id_customer_zip').value = '';
+            document.getElementById('id_customer_state').value = '';
+            document.getElementById('id_customer_city').value = '';
+        }
     });
 </script>
 {% endblock %}

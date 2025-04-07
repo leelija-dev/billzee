@@ -27,8 +27,16 @@ class Invoice(models.Model):
     invoice_id = models.CharField(max_length=19, editable=False, unique=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     profile = models.ForeignKey(Profile, on_delete=models.PROTECT, related_name='invoices', null=True, blank=True)
+
     customer_name = models.CharField(max_length=100)
     customer_email = models.EmailField()
+    customer_contact = models.CharField(max_length=10, help_text="Numeric contact number (max 10 digits)", default="0000000000")
+    customer_address = models.CharField(max_length=200, default="")
+    customer_country = models.CharField(max_length=50, blank=True)  
+    customer_zip = models.CharField(max_length=7, blank=True, help_text="Postal/Zip code")  
+    customer_state = models.CharField(max_length=50, blank=True)  
+    customer_city = models.CharField(max_length=50, blank=True) 
+
     billing_date = models.DateField(default=timezone.now)
     due_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -36,9 +44,9 @@ class Invoice(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD')
-    subtotal_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # stores total of items
-    gst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)         # GST percentage
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)    # final total including GST
+    subtotal_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)  
+    gst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)         
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)    
     is_sent = models.BooleanField(default=False, help_text='Indicates if the invoice has been sent to the customer')
 
     def __str__(self):
@@ -46,7 +54,10 @@ class Invoice(models.Model):
 
     def calculate_total(self):
         # return sum(item.total_price for item in self.items.all())
-        return sum(item.total_price for item in self.items.all())
+        return sum(
+            item.quantity * item.unit_price * (1 - item.discount / 100)
+            for item in self.items.all()
+        )
 
     def update_total(self):
         # """Update total without triggering recursive saves"""
@@ -79,17 +90,93 @@ class Invoice(models.Model):
                 pass  # Allow creation without profile for now
         super().save(*args, **kwargs)
 
+        # InvoiceCustomer.objects.update_or_create(
+        #     invoice=self,
+        #     defaults={
+        #         'customer_name': self.customer_name,
+        #         'customer_email': self.customer_email,
+        #         'customer_contact': self.customer_contact,
+        #         'customer_address': self.customer_address,
+        #         'customer_country': self.customer_country,
+        #         'customer_zip': self.customer_zip,
+        #         'customer_state': self.customer_state,
+        #         'customer_city': self.customer_city,
+        #     }
+        # )
+        customer_data = {
+            'customer_email': self.customer_email,
+        }
+
+        existing_customer = InvoiceCustomer.objects.filter(**customer_data).first()
+
+        if not existing_customer:
+            InvoiceCustomer.objects.create(
+                invoice=self,
+                customer_name=self.customer_name,
+                customer_email=self.customer_email,
+                customer_contact=self.customer_contact,
+                customer_address=self.customer_address,
+                customer_country=self.customer_country,
+                customer_zip=self.customer_zip,
+                customer_state=self.customer_state,
+                customer_city=self.customer_city,
+            )
+
+
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, related_name='items', on_delete=models.CASCADE)
     item = models.CharField(max_length=200)
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def save(self, *args, **kwargs):
         self.total_price = self.quantity * self.unit_price
         super().save(*args, **kwargs)
-        self.invoice.update_total()  # Use the new method to update invoice total
+        self.invoice.update_total()  
+        # Create or update the corresponding Product entry
+        # Product.objects.update_or_create(
+        #     invoice_item=self,
+        #     defaults={'item_name': self.item, 'item_price': self.unit_price}
+        # )
+        product_data = {
+            'item_name': self.item,
+            # 'item_price': self.unit_price,
+        }
+
+        # Check if a product with the same details already exists
+        existing_product = Product.objects.filter(**product_data).first()
+
+        # Only create a new Product record if one does not already exist
+        if not existing_product:
+            Product.objects.create(
+                invoice_item=self,
+                item_name=self.item,
+                item_price=self.unit_price
+                )
 
     def __str__(self):
         return f"{self.item} - {self.invoice.invoice_id}"
+
+class Product(models.Model):
+    invoice_item = models.OneToOneField(InvoiceItem, on_delete=models.CASCADE, primary_key=True)
+    item_name = models.CharField(max_length=200)
+    item_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.item_name} - {self.item_price}"
+
+class InvoiceCustomer(models.Model):
+    invoice = models.OneToOneField(Invoice, on_delete=models.CASCADE, related_name='customer_info')
+    customer_name = models.CharField(max_length=100)
+    customer_email = models.EmailField()
+    customer_contact = models.CharField(max_length=10, help_text="Numeric contact number (max 10 digits)", default="0000000000")
+    customer_address = models.CharField(max_length=200)
+    customer_country = models.CharField(max_length=50, blank=True)
+    customer_zip = models.CharField(max_length=7, blank=True, help_text="Postal/Zip code")
+    customer_state = models.CharField(max_length=50, blank=True)
+    customer_city = models.CharField(max_length=50, blank=True)
+
+    def __str__(self):
+        return f"{self.customer_name} ({self.customer_email}) - Invoice #{self.invoice.invoice_id}"

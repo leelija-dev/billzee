@@ -19,6 +19,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-your-secret-key-here'
 
+RAPIDAPI_KEY = 'c641fa4af9msh852a08a4ceded80p1ee740jsn7edfb34855a1'
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -93,8 +99,9 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -112,7 +119,7 @@ EMAIL_USE_TLS = True
 AUTH_USER_MODEL = 'users.CustomUser'
 
 # Authentication settings
-LOGIN_REDIRECT_URL = '/invoices/dashboard/'  # Redirect to dashboard after login
+LOGIN_REDIRECT_URL = '/'  # Redirect to home page after login
 LOGIN_URL = '/login/'  # Update login URL to match our custom login view
 LOGOUT_REDIRECT_URL = None  # This will make Django use the logged_out.html template
 

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Confirmation</title>
+</head>
+<body>
+    <h1>Payment Confirmation for Invoice #{{ invoice.invoice_id }}</h1>
+    <p>The payment for Invoice #{{ invoice.invoice_id }} has been successfully processed.</p>
+    <p><strong>Details:</strong></p>
+    <ul>
+        <li><strong>Customer:</strong> {{ invoice.customer_name }}</li>
+        <li><strong>Total Amount:</strong> {{ total_amount|floatformat:2 }} {{ invoice.get_currency_display }}</li>
+        <li><strong>Payment Date:</strong> {{ payment_date|date:"F j, Y" }}</li>
+    </ul>
+    <p>Thank you.</p>
+</body>
+</html>

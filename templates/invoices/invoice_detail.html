@@ -18,10 +18,16 @@
                     <a href="{% url 'invoices:edit' invoice.pk %}" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
                         Edit
                     </a>
-                    <form action="{% url 'invoices:send' invoice.pk %}" method="post" class="inline">
+                    <form action="{% url 'invoices:send' invoice.pk %}" method="post" class="inline" onsubmit="showLoader(event)">
                         {% csrf_token %}
-                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600">
-                            Send Invoice
+                        <button id="send-invoice-btn" type="submit" class="flex px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600">
+                            <span id="send-text">Send Invoice</span>
+                            <span id="loader" class="hidden ml-2">
+                                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
+                            </span>
                         </button>
                     </form>
                 </div>
@@ -30,18 +36,18 @@
 
         {% if invoice.profile %}
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div class="grid grid-cols-2 gap-8">
+            <div class="flex justify-between">
                 <div>
                     <h2 class="text-lg font-semibold text-gray-900 mb-2">From</h2>
                     <div class="text-gray-600">
                         <p class="font-medium">{{ invoice.profile.company_name }}</p>
                         <p>{{ invoice.profile.company_email }}</p>
+                        <p>{{ invoice.profile.address }}, {{ invoice.profile.city}}, {{invoice.profile.country}},
+                            {{invoice.profile.state}}, {{invoice.profile.pin_or_zip}} </p>
                         {% if invoice.profile.phone_number %}
                         <p>{{ invoice.profile.phone_number }}</p>
                         {% endif %}
-                        {% if invoice.profile.address %}
-                        <p>{{ invoice.profile.address }}</p>
-                        {% endif %}
+                        <p class="text-gray-800 text-sm font-semibold">GST ID : <span class="text-gray-600">{{ invoice.profile.gst_id }}</span> </p>
                     </div>
                 </div>
                 <div>
@@ -49,6 +55,10 @@
                     <div class="text-gray-600">
                         <p class="font-medium">{{ invoice.customer_name }}</p>
                         <p>{{ invoice.customer_email }}</p>
+                        <p>{{ invoice.customer_address }}, {{ invoice.customer_city}},{{invoice.customer_country}}, 
+                            {{invoice.customer_state}}, {{invoice.customer_zip}}</p>
+                        <p>{{ invoice.customer_contact }}</p>
+                        <p class="text-gray-800 text-sm font-semibold">Invoice Date : <span class="text-gray-600">{{ invoice.billing_date }}</span> </p>
                     </div>
                 </div>
             </div>
@@ -56,31 +66,59 @@
         {% endif %}
 
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="p-6">
-                <div class="grid grid-cols-2 gap-8 mb-6">
-                    <div>
-                        <p class="text-sm text-gray-600">Invoice Date</p>
-                        <p class="text-gray-900">{{ invoice.billing_date }}</p>
+            <div class="p-6 pt-2">
+                <div class="flex justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <span class="px-3 inline-flex text-sm leading-5 font-semibold rounded-full
+                            {% if invoice.status == 'completed' %}
+                                bg-green-100 text-green-800
+                            {% elif invoice.status == 'pending' %}
+                                bg-yellow-100 text-yellow-800
+                            {% else %}
+                                bg-red-100 text-red-800
+                            {% endif %}">
+                            {{ invoice.status|title }}
+                        </span>
+                        {% if invoice.status == 'pending' %}
+                        <div class="">
+                            <p class="text-sm font-bold text-gray-700">Due Date : {{ invoice.due_date }}</p>
+                        </div>
+                        {% endif %}
                     </div>
+                    <div class="flex justify-end gap-4">
                     <div>
-                        <p class="text-sm text-gray-600">Due Date</p>
-                        <p class="text-gray-900">{{ invoice.due_date }}</p>
+                        <a href="{% url 'invoices:download_invoice' invoice.invoice_id %}" class="text-sm text-blue-500 hover:underline" title="Download Invoice">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
                     </div>
+                    <div class="">
+                        <form action="{% url 'invoices:delete' invoice.pk %}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this invoice?');">
+                            {% csrf_token %}
+                            <button type="submit" class="p-1 rounded text-sm bg-red-600 text-white hover:bg-red-800">
+                                Delete Invoice
+                            </button>
+                        </form>
+                    </div>
+                </div>
                 </div>
 
                 <table class="min-w-full divide-y divide-gray-200">
-                    <thead>
+                    <thead class="border-t border-b border-gray-500">
                         <tr>
-                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">
                                 Item
                             </th>
-                            <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-800 uppercase tracking-wider">
                                 Quantity
                             </th>
-                            <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-800 uppercase tracking-wider">
                                 Unit Price ({{ invoice.get_currency_display }})
                             </th>
-                            <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-800 uppercase tracking-wider">
                                 Total ({{ invoice.get_currency_display }})
                             </th>
                         </tr>
@@ -88,46 +126,57 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         {% for item in invoice.items.all %}
                         <tr>
-                            <td class="px-6 py-4 text-sm text-gray-900">
+                            <td class="px-6 py-2 text-sm text-gray-900">
                                 {{ item.item }}
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-900 text-right">
+                            <td class="px-6 py-2 text-sm text-gray-900 text-right">
                                 {{ item.quantity }}
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-900 text-right">
-                                {{ item.unit_price }}
+                            <td class="px-6 py-2 text-sm text-gray-900 text-right">
+                                {{ item.unit_price }} ({{ item.discount|floatformat:"0" }}%)
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-900 text-right">
+                            <td class="px-6 py-2 text-sm text-gray-900 text-right">
                                 {{ item.total_price }}
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
+                    <div class="flex justify-between">
+                        
+                    </div>
                     <tfoot>
-                        {% if invoice.currency == 'INR' %}
-                        <tr>
-                            <td colspan="3" class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
+                        <tr class="border-t border-gray-500">
+                            <td colspan="3" class="px-6 py-2 text-sm font-medium text-gray-900 text-right">
                                 Subtotal
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
-                                {{ invoice.subtotal_amount }}
+                            <td class="px-6 py-2 text-sm font-medium text-gray-900 text-right">
+                                {{ original_subtotal|floatformat:2 }} 
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="3" class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
+                            <td colspan="3" class="px-6 py-2 text-sm font-medium text-gray-900 text-right">
+                                Discount({{ total_discount_rate}}%)                             
+                            </td>
+                            <td class="px-6 py-2 text-sm font-medium text-gray-900 text-right">
+                                {{ total_discount|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% if invoice.currency == 'INR' %}
+                        <tr>
+                            <td colspan="3" class="px-6 py-2 text-sm font-medium text-gray-900 text-right">
                                 GST ({{ invoice.gst_rate }}%)
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
-                                {{ gst_amount }}
+                            <td class="px-6 py-2 text-sm font-medium text-gray-900 text-right">
+                                {{ gst_amount|floatformat:2 }}
                             </td>
                         </tr>
                         {% endif %}
                         <tr>
-                            <td colspan="3" class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
+                            <td colspan="3" class="px-6 py-2 text-sm font-medium text-gray-900 text-right">
                                 Total
                             </td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 text-right">
-                                {{ invoice.total_amount }}
+                            <td class="px-6 py-2 text-sm font-medium text-gray-900 text-right">
+                                {{ total_amount|floatformat:2 }}
                             </td>
                         </tr>
                     </tfoot>
@@ -135,8 +184,8 @@
 
                 {% if invoice.notes %}
                 <div class="mt-6">
-                    <h3 class="text-sm font-medium text-gray-900">Notes</h3>
-                    <p class="mt-2 text-sm text-gray-600">{{ invoice.notes }}</p>
+                    <h3 class="text-sm font-medium text-gray-900">Notes :</h3>
+                    <p class="mt-1 text-sm text-gray-600 border-t border-gray-500">{{ invoice.notes }}</p>
                 </div>
                 {% endif %}
 
@@ -147,38 +196,47 @@
                             class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
                             onclick="this.select();"
                         >
-                        <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value)" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value)" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none" id="copy-link">
                             Copy Link
                         </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="px-6 py-4 bg-gray-50">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                            {% if invoice.status == 'completed' %}
-                                bg-green-100 text-green-800
-                            {% elif invoice.status == 'pending' %}
-                                bg-yellow-100 text-yellow-800
-                            {% else %}
-                                bg-red-100 text-red-800
-                            {% endif %}">
-                            {{ invoice.status|title }}
-                        </span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <form action="{% url 'invoices:delete' invoice.pk %}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this invoice?');">
-                            {% csrf_token %}
-                            <button type="submit" class="text-sm text-red-600 hover:text-red-800">
-                                Delete Invoice
-                            </button>
-                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('copy-link').addEventListener('click', () => {
+        console.log('Copy link button clicked');
+        const button = document.getElementById('copy-link');
+        const checkIcon = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="8" fill="green"/>
+            <path fill="white" d="M11.5 5.5a.5.5 0 0 1 0 .7l-4 4a.75.75 0 0 1-1.06 0l-2-2a.5.5 0 0 1 .7-.7l1.65 1.65 3.65-3.65a.5.5 0 0 1 .7 0z"
+            style="transform: scale(1.5); transform-origin: center;"/>
+        </svg>`;
+        button.innerHTML = ' Copied ' + checkIcon ;
+        setTimeout(() => {
+            button.innerHTML = 'Copy Link';
+        }, 2000);
+    });
+
+    function showLoader(event) {
+        event.preventDefault(); 
+        const button = document.getElementById('send-invoice-btn');
+        const text = document.getElementById('send-text');
+        const loader = document.getElementById('loader');
+
+        button.disabled = true;
+        text.textContent = "Sending...";
+        loader.classList.remove('hidden');
+
+        setTimeout(() => {
+            event.target.submit();
+        }, 100); 
+    }
+</script>
+
+
 {% endblock %}
