@@ -1,22 +1,36 @@
 import json
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail,  get_connection
-from django.template.loader import render_to_string
+import logging
+import time
+import warnings
+from decimal import Decimal
+
 from django.conf import settings
 from django.contrib import messages
-from django.urls import reverse
-from django.utils.html import strip_tags
-from django.utils import timezone
-from .models import Invoice, InvoiceItem, Product, InvoiceCustomer
-from .forms import InvoiceForm, InvoiceItemFormSet
-from users.models import Profile
+from django.contrib.auth.decorators import login_required
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.db import transaction
-from django.http import JsonResponse, HttpResponse
-from django.db.models import Q
-from decimal import Decimal
-from .utils import render_to_pdf
 from django.db.models import Max
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.html import strip_tags
+
+import paypalrestsdk
+from cashfree_pg.api_client import Cashfree
+from cashfree_pg.models.customer_details import CustomerDetails
+from cashfree_pg.models.create_link_request import CreateLinkRequest
+from cashfree_pg.models.link_notify_entity import LinkNotifyEntity
+
+from .forms import InvoiceForm, InvoiceItemFormSet
+from .models import Invoice, InvoiceItem, InvoiceCustomer, Product
+from .utils import render_to_pdf
+from users.models import Profile
+
+from cashfree_pg.models.create_order_request import CreateOrderRequest
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -224,45 +238,318 @@ def send_invoice(request, pk):
         messages.success(request, f'Invoice sent to {invoice.customer_email}')
     return redirect('invoices:detail', pk=pk)
 
+@login_required
 def customer_invoice_view(request, uuid):
     invoice = get_object_or_404(Invoice, invoice_id=uuid)
+
+    # Auto-trigger payment if parameter exists
+    if request.GET.get('initiate_payment') and request.method == 'GET':
+        return render(request, 'invoices/customer_invoice_view.html', {
+            'invoice': invoice,
+            'auto_pay': True, 
+        })
     
     original_subtotal = sum(item.quantity * item.unit_price for item in invoice.items.all())
     total_discount_rate = sum(int(item.discount) for item in invoice.items.all())
-
     total_discount = sum(
         (item.quantity * item.unit_price * item.discount) / Decimal('100')
         for item in invoice.items.all()
     )
-
-    # Subtotal after discounts
     subtotal = original_subtotal - total_discount or Decimal('0')
-    # subtotal = invoice.subtotal_amount or 0
     gst_rate = invoice.gst_rate or Decimal('0')
     gst_amount = (subtotal * gst_rate) / Decimal('100')
     total_amount = subtotal + gst_amount
 
     if request.method == 'POST' and 'mark_paid' in request.POST:
-        # Mark the invoice as paid
+
+        # Configure PayPal SDK
+        paypalrestsdk.configure({
+            "mode": settings.PAYPAL_MODE,
+            "client_id": settings.PAYPAL_CLIENT_ID,
+            "client_secret": settings.PAYPAL_SECRET
+        })
+
+        # Create PayPal payment
+        payment = paypalrestsdk.Payment({
+            "intent": "sale",
+            "payer": {"payment_method": "paypal"},
+            "redirect_urls": {
+                "return_url": request.build_absolute_uri(
+                    reverse('invoices:paypal_return') + f'?invoice_id={invoice.invoice_id}'
+                ),
+                "cancel_url": request.build_absolute_uri(
+                    reverse('invoices:customer_view', kwargs={'uuid': invoice.invoice_id}) + '?cancelled=true'
+                )
+            },
+            "transactions": [{
+                "amount": {
+                    "total": str(total_amount.quantize(Decimal('0.01'))),
+                    # "currency": "USD"
+                    "currency": invoice.currency
+                },
+                "description": f"Payment for Invoice #{invoice.invoice_id}"
+            }]
+        })
+
+        if payment.create():
+            invoice.paypal_payment_id = payment.id
+            invoice.save()
+            for link in payment.links:
+                if link.rel == "approval_url":
+                    return redirect(link.href)
+        else:
+            messages.error(request, f"Failed to create PayPal payment: {payment.error}")
+            return render(request, 'invoices/customer_invoice_view.html', {
+                'invoice': invoice,
+                'original_subtotal': original_subtotal,
+                'total_discount': total_discount,
+                'subtotal': subtotal,
+                'gst_amount': gst_amount,
+                'total_amount': total_amount,
+                'total_discount_rate': total_discount_rate,
+                'title': f'Invoice #{invoice.invoice_id}',
+                'PAYPAL_CLIENT_ID': settings.PAYPAL_CLIENT_ID,
+                'currency': invoice.currency
+            })
+
+    if 'cancelled' in request.GET:
+        messages.info(request, "Payment was cancelled.")
+
+    return render(request, 'invoices/customer_invoice_view.html', {
+        'invoice': invoice,
+        'original_subtotal': original_subtotal,
+        'total_discount': total_discount,
+        'subtotal': subtotal,
+        'gst_amount': gst_amount,
+        'total_amount': total_amount,
+        'total_discount_rate': total_discount_rate,
+        'title': f'Invoice #{invoice.invoice_id}',
+        'PAYPAL_CLIENT_ID': settings.PAYPAL_CLIENT_ID,
+        'currency': invoice.currency
+    })
+
+def paypal_return(request):
+    invoice_id = request.GET.get('invoice_id')
+    payment_id = request.GET.get('paymentId')
+    payer_id = request.GET.get('PayerID')
+
+    invoice = get_object_or_404(Invoice, invoice_id=invoice_id)
+
+    # If required PayPal parameters are missing, treat it as a cancelled payment.
+    if not payment_id or not payer_id:
+        messages.info(request, "Payment was not completed.")
+        return redirect('invoices:customer_view', uuid=invoice.invoice_id)
+
+    if invoice.paypal_payment_id != payment_id:
+        messages.error(request, "Invalid payment ID.")
+        return redirect('invoices:customer_view', uuid=invoice.invoice_id)
+
+    # Configure PayPal SDK
+    paypalrestsdk.configure({
+        "mode": settings.PAYPAL_MODE,
+        "client_id": settings.PAYPAL_CLIENT_ID,
+        "client_secret": settings.PAYPAL_SECRET
+    })
+
+    payment = paypalrestsdk.Payment.find(payment_id)
+    if payment.execute({"payer_id": payer_id}):
+        if payment.state == "approved":
+            invoice.status = 'completed'
+            invoice.save()
+
+            # Generate PDF and send emails (as before)
+            original_subtotal = sum(item.quantity * item.unit_price for item in invoice.items.all())
+            total_discount = sum(
+                (item.quantity * item.unit_price * item.discount) / Decimal('100')
+                for item in invoice.items.all()
+            )
+            subtotal = original_subtotal - total_discount or Decimal('0')
+            gst_amount = (subtotal * invoice.gst_rate) / Decimal('100') if invoice.gst_rate else Decimal('0')
+            total_amount = subtotal + gst_amount
+
+            context = {
+                'invoice': invoice,
+                'original_subtotal': original_subtotal,
+                'total_discount': total_discount,
+                'total_discount_rate': sum(int(item.discount) for item in invoice.items.all()),
+                'gst_amount': gst_amount,
+                'total_amount': total_amount,
+            }
+            pdf = render_to_pdf('pdfgenerate/pdf_generate.html', context)
+
+            if not pdf:
+                messages.error(request, "PDF generation failed.")
+                return redirect('invoices:customer_view', uuid=invoice.invoice_id)
+
+            connection = get_connection(
+                host=settings.EMAIL_HOST,
+                port=settings.EMAIL_PORT,
+                username=invoice.profile.company_email,
+                password=invoice.profile.password,
+                use_tls=settings.EMAIL_USE_TLS,
+            )
+            payment_date = timezone.now().date()
+            subject = f'Payment Confirmation for Invoice #{invoice.invoice_id}'
+            filename = f"Invoice_{invoice.invoice_id}.pdf"
+            email_html = render_to_string('invoices/payment_confirmation.html', {
+                'invoice': invoice,
+                'total_amount': total_amount,
+                'payment_date': payment_date,
+            })
+
+            # Send to customer
+            customer_email = EmailMultiAlternatives(
+                subject=subject,
+                body=strip_tags(email_html),
+                from_email=invoice.profile.company_email,
+                to=[invoice.customer_email],
+                connection=connection,
+            )
+            customer_email.attach_alternative(email_html, "text/html")
+            customer_email.attach(filename, pdf, 'application/pdf')
+            customer_email.send(fail_silently=False)
+
+            # Send to profile
+            merchant_email = EmailMultiAlternatives(
+                subject=f'Payment Received - {subject}',
+                body=strip_tags(email_html),
+                from_email=invoice.profile.company_email,
+                to=[invoice.profile.company_email],
+                connection=connection,
+            )
+            merchant_email.attach_alternative(email_html, "text/html")
+            merchant_email.attach(filename, pdf, 'application/pdf')
+            merchant_email.send(fail_silently=False)
+
+            messages.success(request, "Payment completed successfully.")
+            redirect_url = reverse('invoices:customer_view', kwargs={'uuid': invoice.invoice_id}) + '?from_popup=1&success=1'
+            return redirect(redirect_url)
+        else:
+            messages.error(request, "Payment not approved.")
+    else:
+        messages.error(request, "Payment execution failed.")
+
+    return redirect('invoices:customer_view', uuid=invoice.invoice_id) 
+    
+# @login_required
+def cashfree_payment(request, uuid):
+    invoice = get_object_or_404(Invoice, invoice_id=uuid)
+    
+    # Calculate totals
+    original_subtotal = sum(item.quantity * item.unit_price for item in invoice.items.all())
+    total_discount = sum(
+        (item.quantity * item.unit_price * item.discount) / Decimal('100')
+        for item in invoice.items.all()
+    )
+    subtotal = original_subtotal - total_discount or Decimal('0')
+    gst_amount = (subtotal * invoice.gst_rate) / Decimal('100') if invoice.gst_rate else Decimal('0')
+    total_amount = subtotal + gst_amount
+
+    # Configure Cashfree SDK
+    Cashfree.XClientId = settings.CASHFREE_APP_ID
+    Cashfree.XClientSecret = settings.CASHFREE_SECRET_KEY
+    Cashfree.XEnvironment = Cashfree.SANDBOX  
+    x_api_version = settings.CASHFREE_API_VERSION
+
+    try:
+        # Create unique order ID
+        order_id = f"order_{uuid}_{int(time.time())}"
+        
+        # Create order request
+        order_request = CreateOrderRequest(
+            order_id=order_id,
+            order_amount=float(total_amount.quantize(Decimal('0.01'))),
+            order_currency=invoice.currency,
+            customer_details=CustomerDetails(
+                customer_id=str(uuid),
+                customer_email=invoice.customer_email,
+                customer_phone=invoice.customer_contact
+            ),
+            order_meta={
+                "return_url": request.build_absolute_uri(
+                    reverse('invoices:cashfree_return') + f'?invoice_id={uuid}'
+                )
+            }
+        )
+
+        # Create order
+        order_response = Cashfree().PGCreateOrder(x_api_version, order_request)
+        
+        if order_response.status_code == 200:
+            invoice.cashfree_order_id = order_id
+            invoice.save()
+            
+            return JsonResponse({
+                'payment_session_id': order_response.data.payment_session_id,
+                'cashfree_mode': 'sandbox'  # Change to 'production' for live
+            })
+        
+        return JsonResponse({'error': order_response.data.message}, status=400)
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def cashfree_return(request):
+    invoice_id = request.GET.get('invoice_id')
+    invoice = get_object_or_404(Invoice, invoice_id=invoice_id)
+
+    Cashfree.XClientId = settings.CASHFREE_APP_ID
+    Cashfree.XClientSecret = settings.CASHFREE_SECRET_KEY
+    Cashfree.XEnvironment = Cashfree.SANDBOX  # Use PRODUCTION for live
+    x_api_version = settings.CASHFREE_API_VERSION
+
+    order_id = invoice.cashfree_order_id
+    if not order_id:
+        messages.error(request, "Invalid payment reference.")
+        return redirect('invoices:customer_view', uuid=invoice_id)
+
+    try:
+        resp = Cashfree().PGFetchOrder(x_api_version, order_id)
+        if resp.status_code != 200:
+            logger.error("FetchOrder failed for %s: %s", order_id, resp.data)
+            messages.error(request, "Could not verify payment status.")
+            return redirect('invoices:customer_view', uuid=invoice_id)
+
+        status = (getattr(resp.data, 'order_status', '') or '').upper()
+        logger.info("Cashfree order %s status: %s", order_id, status)
+
+        if status not in ('PAID', 'SUCCESS'):
+            messages.error(request, f"Payment not successful (status: {status}).")
+            return redirect('invoices:customer_view', uuid=invoice_id)
+
         invoice.status = 'completed'
-        invoice.save()
+        invoice.save(update_fields=['status'])
+        messages.success(request, "Payment completed successfully!")
 
-        # Generate PDF
-        context = {
-            'invoice': invoice,
-            'original_subtotal': original_subtotal,
-            'total_discount': total_discount,
-            'total_discount_rate': total_discount_rate,
-            'gst_amount': gst_amount,
-            'total_amount': total_amount,
-        }
-        
-        pdf = render_to_pdf('invoices/customer_invoice_view.html', context)
-        
-        if not pdf:
-            return HttpResponse("PDF generation failed", status=500)
+    except Exception as e:
+        logger.exception("Exception while fetching Cashfree order %s: %s", order_id, str(e))
+        messages.error(request, "An error occurred while verifying payment.")
+        return redirect('invoices:customer_view', uuid=invoice_id)
 
-        # Set up email connection using company credentials
+    original_subtotal = sum(item.quantity * item.unit_price for item in invoice.items.all())
+    total_discount = sum(
+        (item.quantity * item.unit_price * item.discount) / Decimal('100')
+        for item in invoice.items.all()
+    )
+    subtotal = original_subtotal - total_discount
+    gst_amount = (subtotal * invoice.gst_rate) / Decimal('100') if invoice.gst_rate else Decimal('0')
+    total_amount = subtotal + gst_amount
+
+    pdf_context = {
+        'invoice': invoice,
+        'original_subtotal': original_subtotal,
+        'total_discount': total_discount,
+        'total_discount_rate': sum(item.discount for item in invoice.items.all()),
+        'gst_amount': gst_amount,
+        'total_amount': total_amount,
+    }
+    pdf_file = render_to_pdf('pdfgenerate/pdf_generate.html', pdf_context)
+    if not pdf_file:
+        messages.warning(request, "Payment succeeded but PDF generation failed.")
+        return redirect('invoices:customer_view', uuid=invoice_id)
+
+    try:
         connection = get_connection(
             host=settings.EMAIL_HOST,
             port=settings.EMAIL_PORT,
@@ -270,8 +557,6 @@ def customer_invoice_view(request, uuid):
             password=invoice.profile.password,
             use_tls=settings.EMAIL_USE_TLS,
         )
-
-        # Prepare email content
         payment_date = timezone.now().date()
         subject = f'Payment Confirmation for Invoice #{invoice.invoice_id}'
         filename = f"Invoice_{invoice.invoice_id}.pdf"
@@ -281,56 +566,49 @@ def customer_invoice_view(request, uuid):
             'payment_date': payment_date,
         })
 
-        # Send email to customer
-        send_mail(
+        # Send to customer
+        customer_email = EmailMultiAlternatives(
             subject=subject,
-            message=strip_tags(email_html),
+            body=strip_tags(email_html),
             from_email=invoice.profile.company_email,
-            recipient_list=[invoice.customer_email],
-            html_message=email_html,
-            fail_silently=False,
+            to=[invoice.customer_email],
             connection=connection,
-            attachments=[  # CORRECTED: Remove .getvalue()
-                (filename, pdf, 'application/pdf')
-            ]
         )
+        customer_email.attach_alternative(email_html, "text/html")
+        customer_email.attach(filename, pdf_file, 'application/pdf')  
+        customer_email.send(fail_silently=False)
 
-        # Send email to company
-        send_mail(
+        # Send to merchant
+        merchant_email = EmailMultiAlternatives(
             subject=f'Payment Received - {subject}',
-            message=strip_tags(email_html),
+            body=strip_tags(email_html),
             from_email=invoice.profile.company_email,
-            recipient_list=[invoice.profile.company_email],
-            html_message=email_html,
-            fail_silently=False,
+            to=[invoice.profile.company_email],
             connection=connection,
-            attachments=[  # CORRECTED: Remove .getvalue()
-                (filename, pdf, 'application/pdf')
-            ]
+        )
+        merchant_email.attach_alternative(email_html, "text/html")
+        merchant_email.attach(filename, pdf_file, 'application/pdf')  
+        merchant_email.send(fail_silently=False)
+
+        messages.success(request, "Confirmation emails sent successfully.")
+    except Exception as e:
+        logger.exception(
+            "Failed to send confirmation emails for invoice %s. "
+            "SMTP Host: %s, Port: %s, Username: %s. Error: %s",
+            invoice_id,
+            settings.EMAIL_HOST,
+            settings.EMAIL_PORT,
+            invoice.profile.company_email,
+            str(e)
+        )
+        messages.warning(
+            request,
+            "Payment succeeded, but failed to send confirmation emails. "
+            "Please check your email settings in the profile."
         )
 
-        messages.success(request, 'Invoice marked as paid successfully.')
-        # return redirect('invoices:detail', pk=invoice.pk)
-        return render(request, 'invoices/customer_invoice_view.html', {
-            'invoice': invoice,
-            'original_subtotal': original_subtotal,
-            'total_discount': total_discount,
-            'subtotal': subtotal,
-            'gst_amount': gst_amount,
-            'total_amount': total_amount,
-            'total_discount_rate': total_discount_rate,
-            'title': f'Invoice #{invoice.invoice_id}'
-        })
-    return render(request, 'invoices/customer_invoice_view.html', {
-        'invoice': invoice,
-        'original_subtotal': original_subtotal,
-        'total_discount': total_discount,
-        'subtotal': subtotal,
-        'gst_amount': gst_amount,
-        'total_amount': total_amount,
-        'total_discount_rate': total_discount_rate,
-        'title': f'Invoice #{invoice.invoice_id}'
-    })
+    return redirect('invoices:customer_view', uuid=invoice_id)
+
 
 def invoice_profile_activate(request, pk):
     if request.method == 'POST':
@@ -377,7 +655,8 @@ def invoice_pdf_view(request, invoice_id):
         'total_amount': total_amount,
     }
     
-    pdf = render_to_pdf('invoices/customer_invoice_view.html', context)
+    # return render(request, 'pdfgenerate/pdf_generate.html', context)
+    pdf = render_to_pdf('pdfgenerate/pdf_generate.html', context)
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         filename = f"Invoice_{invoice.invoice_id}.pdf"

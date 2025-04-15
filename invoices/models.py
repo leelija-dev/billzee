@@ -48,6 +48,8 @@ class Invoice(models.Model):
     gst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)         
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)    
     is_sent = models.BooleanField(default=False, help_text='Indicates if the invoice has been sent to the customer')
+    paypal_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    cashfree_order_id = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return f"Invoice #{self.invoice_id} - {self.customer_name}"
@@ -90,19 +92,6 @@ class Invoice(models.Model):
                 pass  # Allow creation without profile for now
         super().save(*args, **kwargs)
 
-        # InvoiceCustomer.objects.update_or_create(
-        #     invoice=self,
-        #     defaults={
-        #         'customer_name': self.customer_name,
-        #         'customer_email': self.customer_email,
-        #         'customer_contact': self.customer_contact,
-        #         'customer_address': self.customer_address,
-        #         'customer_country': self.customer_country,
-        #         'customer_zip': self.customer_zip,
-        #         'customer_state': self.customer_state,
-        #         'customer_city': self.customer_city,
-        #     }
-        # )
         customer_data = {
             'customer_email': self.customer_email,
         }

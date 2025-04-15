@@ -1,8 +1,14 @@
 {% extends 'base.html' %}
+{% load static %}
+
 
 {% block title %}Invoice #{{ invoice.invoice_id|truncatechars:8 }}{% endblock %}
 
 {% block content %}
+<div id="currencyCheckContainer" class="container flex justify-center hidden">
+    <p id="currencyCheckMessage" class="text-center bg-yellow-100 border border-yellow-400 text-yellow-800 rounded-lg p-3 font-semibold z-20 absolute shadow-md">
+    </p>
+  </div>
 <div class="bg-white shadow overflow-hidden sm:rounded-lg max-w-4xl mx-auto mt-20">
     <div class="mx-6">
         <!-- Invoice Header -->
@@ -125,22 +131,32 @@
                 </table>
             </div>
         </div>
-
         <!-- Pay Later Section -->
         {% if invoice.status == 'pending' %}
         <div class="border-t border-gray-200 py-5">
             <div class="text-center">
                 <h3 class="text-lg font-medium text-gray-900">Ready to Complete Payment?</h3>
                 <p class="mt-1 text-sm text-gray-500">Click below to mark this invoice as paid</p>
-                <form method="post" class="mt-4">
-                    {% csrf_token %}
-                    <button type="submit" name="mark_paid"
-                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                        Mark as Paid
-                    </button>
-                </form>
+
+                <button id="paypal-button" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-lg font-semibold rounded-md text-white bg-blue-900 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-4">
+                    Pay &nbsp; <img class="w-8" src="{% static 'img/paypalIcon.png' %}" alt=""> <span class="italic text-lg">PayPal</span>
+                </button>
+                <button id="cashfree-button" class="ml-2 inline-flex items-center px-4 py-1 border border-transparent shadow-sm font-semibold text-lg rounded-md text-white bg-purple-900 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 mt-4"
+                >
+                    Pay &nbsp;<span class="h-4"> <img class="" src="{% static 'img/upi.png' %}" width="40" height="20" alt=""> &nbsp;</span> /  <img class="border-white" src="{% static 'img/card.png' %}" width="40" height="20" alt="">
+                </button>
             </div>
         </div>
+        {% endif %}
+
+        {% if request.GET.from_popup and request.GET.success %}
+        <script>
+            if (window.opener && !window.opener.closed) {
+                window.opener.location.reload(true);
+                // window.opener.postMessage('paymentSuccess', '*');
+            }
+            window.close();
+        </script>
         {% endif %}
 
         {% if invoice.status == 'completed' %}
@@ -167,8 +183,138 @@
         {% endif %}
     </div>
 </div>
+
+    {% if auto_pay %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('form').submit();
+        });
+    </script>
+    {% endif %}
+
+    <script>
+        // always reload opener when *this* window unloads for any reason
+        window.addEventListener('unload', function(){
+          if (window.opener && !window.opener.closed) {
+            window.opener.location.reload(true);
+          }
+        });
+    </script>
+    <script>
+        (function(){
+          // 1) Catch the popup’s postMessage at all times:
+        //   window.addEventListener('message', function(e) {
+        //     if (e.data === 'paymentSuccess') {
+        //       // force a real reload from server
+        //       window.location.reload(true);
+        //     }
+        //   });
+      
+          // 2) Wait for the DOM, then only bind the click if the button is present:
+          document.addEventListener('DOMContentLoaded', function(){
+            const btn = document.getElementById('paypal-button');
+            if (!btn) return;   // no button → no click handler
+      
+            btn.addEventListener('click', function(e) {
+              e.preventDefault();
+      
+              // currency check (INR unsupported)
+              const currency = '{{ invoice.currency }}';
+              if (currency === 'INR') {
+                const container = document.getElementById('currencyCheckContainer');
+                const message   = document.getElementById('currencyCheckMessage');
+                message.innerText = '⚠ PayPal does not support INR payments. Please use the other option instead.';
+                container.classList.remove('hidden');
+                setTimeout(() => container.classList.add('hidden'), 7000);
+                return;
+              }
+      
+              // center the popup
+              const w = 600, h = 850;
+              const left = (window.screenLeft ?? screen.left) + ((window.innerWidth || document.documentElement.clientWidth) - w) / 2;
+              const top  = (window.screenTop  ?? screen.top ) + ((window.innerHeight|| document.documentElement.clientHeight) - h) / 2;
+      
+              // open it
+              const popup = window.open('', 'paypalPopup', `width=${w},height=${h},top=${top},left=${left}`);
+      
+              // build + submit the form into that popup
+              const form = document.createElement('form');
+              form.method = 'post';
+              form.action = '';
+              form.target = 'paypalPopup';
+              form.innerHTML = `
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                <input type="hidden" name="mark_paid">
+              `;
+              document.body.appendChild(form);
+              form.submit();
+              document.body.removeChild(form);
+      
+              // fallback: if popup ever closes, reload parent
+              const checkPopup = setInterval(() => {
+                if (popup.closed) {
+                  clearInterval(checkPopup);
+                  window.location.reload();
+                }
+              }, 500);
+            });
+          });
+        })();
+      </script>
+      
+
+
+<script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+
+<script>
+    document.getElementById('cashfree-button').addEventListener('click', async function(e) {
+      e.preventDefault();
+
+      const currency = '{{ invoice.currency }}';
+
+            if (currency != 'INR') {
+                const container = document.getElementById('currencyCheckContainer');
+                const message = document.getElementById('currencyCheckMessage');
+                message.innerText = '⚠ Does not support {{ invoice.currency }} payments. Please use the other option instead.';
+                container.classList.remove('hidden');
+                setTimeout(() => {
+                    container.classList.add('hidden');
+                }, 7000);
+                return;
+            }
+      const btn = this;
+      btn.disabled = true;
+    
+      try {
+        if (typeof Cashfree === 'undefined') {
+          throw new Error('Cashfree SDK failed to load. Please refresh.');
+        }
+        const resp = await fetch("{% url 'invoices:cashfree_payment' uuid=invoice.invoice_id %}");
+        const data = await resp.json();
+    
+        if (!data.payment_session_id) {
+          throw new Error(data.error || 'No payment_session_id returned');
+        }
+        const cf = Cashfree({
+          mode: data.cashfree_mode 
+        });
+        cf.checkout({
+          paymentSessionId: data.payment_session_id,
+          returnUrl: window.location.origin + "{% url 'invoices:cashfree_return' %}?invoice_id={{ invoice.invoice_id }}",
+          redirectTarget: "_self"   
+        }).then(result => {
+          if (result.error) {
+            alert(result.error.message);
+          }
+        });
+    
+      } catch (err) {
+        alert('Error: ' + err.message);
+        console.error(err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    </script>
+   
 {% endblock %}
-
-<!-- <script>
-
-</script> -->

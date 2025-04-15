@@ -3,3 +3,8 @@ _binvoice
 
 # modules
 node_modules
+
+.env
+env/
+db.sqlite3
+*.log

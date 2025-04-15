@@ -732,7 +732,8 @@
         const isEditing = {% if invoice.id %}true{% else %}false{% endif %};
         if (isEditing) {
             document.querySelectorAll('input[name^="customer_"], textarea[name^="customer_"]').forEach(field => {
-                field.disabled = true;
+                //field.disabled = true;
+                field.readOnly = true; 
                 field.style.background = '#d9d9d9';  
                 field.style.cursor = 'no-drop'; 
             });

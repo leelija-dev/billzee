@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice #{{ invoice.invoice_id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      color: #333;
+    }
+    .invoice-container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    td, th {
+      padding: 12px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+    .status-completed { background: #e6f4ea; color: #237a3e; }
+    .status-pending   { background: #fff4e5; color: #a66308; }
+    .status-cancelled { background: #fdecea; color: #9d1b1b; }
+    .invoice-items th {
+      background: #f9f9f9;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      border-bottom: 1px solid #eee;
+    }
+    .invoice-items td {
+      border-bottom: 1px solid #eee;
+    }
+    .invoice-footer td {
+      font-weight: bold;
+      background: #f9f9f9;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <!-- Header -->
+    {% if invoice.profile %}
+    <table>
+      <tr>
+        <td style="width: 50%;">
+          <h2 style="margin: 0 0 8px; font-size: 1.25rem; color: #111;">From:</h2>
+          <p style="margin: -2px 0; font-size: 0.9rem;"><strong>{{ invoice.profile.company_name }}</strong></p>
+          <p style="margin: -2px 0; font-size: 0.9rem;">{{ invoice.profile.company_email }}</p>
+          <p style="margin: -2px 0; font-size: 0.9rem;">{{ invoice.profile.address }}, {{ invoice.profile.city}}, {{invoice.profile.country}}, {{invoice.profile.state}}, {{invoice.profile.pin_or_zip}}</p>
+          {% if invoice.profile.phone_number %}
+            <p style="margin: -2px 0; font-size: 0.9rem;">{{ invoice.profile.phone_number }}</p>
+          {% endif %}
+          <p style="margin: -2px 0; font-size: 0.9rem;">GST ID: {{ invoice.profile.gst_id }}</p>
+        </td>
+        <td style="width: 50%;">
+          <h2 style="margin: 0 0 8px; font-size: 1.25rem; color: #111;">Invoice #{{ invoice.invoice_id }}</h2>
+          <p style="margin: -2px 0; font-size: 0.9rem;"><strong>{{ invoice.customer_name }}</strong></p>
+          <p style="margin: -2px 0; font-size: 0.9rem;">{{ invoice.customer_email }}</p>
+          <p style="margin: -2px 0; font-size: 0.9rem;">{{ invoice.customer_address }}, {{ invoice.customer_city}}, {{invoice.customer_country}}, {{invoice.customer_state}}, {{invoice.customer_zip}}</p>
+          <p style="margin: -2px 0; font-size: 0.9rem;">{{ invoice.customer_contact }}</p>
+          <p style="margin: -2px 0; font-size: 0.9rem;">Invoice Date: {{ invoice.billing_date }}</p>
+        </td>
+      </tr>
+    </table>
+    {% endif %}
+
+    <!-- Status -->
+    <table style="border-top: 1px solid #ccc; margin-top: -10px;">
+      <tr>
+        <td style="width: 50%; text-align: left; padding: 12px 0;">
+          <span class="status-badge 
+            {% if invoice.status == 'completed' %}status-completed
+            {% elif invoice.status == 'pending' %}status-pending
+            {% elif invoice.status == 'cancelled' %}status-cancelled
+            {% else %}status-pending{% endif %}"
+          >
+            {{ invoice.status|title }}
+          </span>
+        </td>
+        <td style="width: 50%; text-align: right; padding: 12px 0;">
+          {% if invoice.status == 'pending' %}
+            Due Date: {{ invoice.due_date|date:"F j, Y" }}
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+
+    <!-- Items -->
+    <div class="invoice-items" style="margin-top: -10px; border-top: 1px solid #ccc;">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align: left;">Item</th>
+            <th style="text-align: right;">Quantity</th>
+            <th style="text-align: right;">Unit Price (USD)</th>
+            <th style="text-align: right;">Total (USD)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in invoice.items.all %}
+          <tr>
+            <td style="text-align: left;">{{ item.item }}</td>
+            <td style="text-align: right;">{{ item.quantity }}</td>
+            <td style="text-align: right;">{{ item.unit_price }} ({{ item.discount|floatformat:"0" }}%)</td>
+            <td style="text-align: right;">{{ item.total_price }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="invoice-footer">
+          <tr>
+            <td colspan="3" style="text-align: right;">Subtotal</td>
+            <td style="text-align: right;">{{ original_subtotal }}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;">Discount ({{ total_discount_rate }}%)</td>
+            <td style="text-align: right;">− {{ total_discount }}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;">GST ({{ invoice.gst_rate }}%)</td>
+            <td style="text-align: right;">{{ gst_amount }}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;">Total</td>
+            <td style="text-align: right;">{{ total_amount }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
