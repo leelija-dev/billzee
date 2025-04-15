@@ -145,25 +145,3 @@ CASHFREE_SECRET_KEY = config("CASHFREE_SECRET_KEY")
 CASHFREE_ENV = "SANDBOX"
 # CASHFREE_LIVE_MODE = config("CASHFREE_LIVE_MODE", "False").lower() == "true"
 CASHFREE_API_VERSION = "2023-08-01"
-
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'formatters': {
-#         'verbose': {
-#             'format': '[{asctime}] {levelname} {message}',
-#             'style': '{',
-#         },
-#     },
-#     'handlers': {
-#         'console': {
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'verbose',
-#         },
-#     },
-#     'root': {
-#         'handlers': ['console'],
-#         'level': 'DEBUG',
-#     },
-# }
-
