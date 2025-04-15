@@ -156,6 +156,8 @@ def invoice_update(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk, profile__user=request.user)
     profiles = Profile.objects.filter(user=request.user)
     # customers = Invoice.objects.filter(profile=invoice.profile).values_list('customer_name', flat=True).distinct().order_by('customer_name')
+    latest_products = Product.objects.values('item_name').annotate(max_id=Max('invoice_item_id')).order_by()
+    products = Product.objects.filter(invoice_item_id__in=[p['max_id'] for p in latest_products]).values_list('item_name', 'item_price', flat=False).order_by('item_name')
     if request.method == 'POST':
         # return JsonResponse({'data':request.POST})
         form = InvoiceForm(request.POST, instance=invoice)
@@ -186,6 +188,7 @@ def invoice_update(request, pk):
         'title': f'Edit Invoice #{invoice.invoice_id}',
         'active_profile': invoice.profile,
         'profiles': profiles,
+        'latest_products': latest_products,
         # 'customers': customers
     })
 

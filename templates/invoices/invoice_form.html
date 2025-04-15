@@ -87,12 +87,42 @@
                         Customer Name
                     </label>
                     {{ form.customer_name }}
-                    <datalist id="customers-list">
+                        <div id="customers-dropdown" class="hidden absolute z-10 w-64 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <!-- <th class="px-4 py-2 text-left">Name</th> -->
+                                        <th class="px-4 py-2 text-left">Email</th>
+                                        <!-- <th class="px-4 py-2 text-left">Contact</th>
+                                        <th class="px-4 py-2 text-left">Address</th> -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for customer in customers %}
+                                    <tr class="customer-option hover:bg-blue-50 cursor-pointer" 
+                                        data-email="{{ customer.1 }}"
+                                        data-contact="{{ customer.2 }}"
+                                        data-address="{{ customer.3 }}"
+                                        data-country="{{ customer.4 }}"
+                                        data-zip="{{ customer.5 }}"
+                                        data-state="{{ customer.6 }}"
+                                        data-city="{{ customer.7 }}">
+                                        <!-- <td class="px-4 py-2 border-t">{{ customer.0 }}</td> -->
+                                        <td class="px-4 py-2 border-t">{{ customer.1 }}</td>
+                                        <!-- <td class="px-4 py-2 border-t">{{ customer.2 }}</td>
+                                        <td class="px-4 py-2 border-t">{{ customer.3 }}</td> -->
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                         <!-- {{ form.customer_name }} -->
+                    <!-- <datalist id="customers-list">
                         {% for customer in customers %}
                         <option value="{{ customer.0}}">
                         </option>
                         {% endfor %}
-                    </datalist>
+                    </datalist> -->
                     {% if form.customer_name.errors %}
                     <p class="mt-2 text-sm text-red-600">{{ form.customer_name.errors.0 }}</p>
                     {% endif %}
@@ -331,8 +361,15 @@
                         </div>
                         <div class="mt-2 flex justify-end">
                             <label class="inline-flex items-center">
-                                {{ form.DELETE }}
-                                <span class="ml-2 text-sm text-red-600">Delete this item</span>
+                                {{ form.DELETE.as_hidden }}
+                                <button type="button" class="delete-item text-red-600 hover:text-red-800 flex">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7 4H4a1 1 0 000 
+                                        2h1v10a2 2 0 002 2h6a2 2 0 002-2V6h1a1 1 0 
+                                        100-2h-3l-.106-.447A1 1 0 0011 2H9zM7 
+                                        6h6v10H7V6z" clip-rule="evenodd" />
+                                    </svg>Delete This Item
+                                </button>
                             </label>
                         </div>
                     </div>
@@ -370,8 +407,15 @@
                         </div>
                             <div class="mt-2 flex justify-end">
                                 <label class="inline-flex items-center">
-                                    {{ formset.empty_form.DELETE }}
-                                    <span class="ml-2 text-sm text-red-600">Delete this item</span>
+                                    {{ formset.empty_form.DELETE.as_hidden }}
+                                    <button type="button" class="delete-item text-red-600 hover:text-red-800 flex">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7 4H4a1 1 0 000 
+                                            2h1v10a2 2 0 002 2h6a2 2 0 002-2V6h1a1 1 0 
+                                            100-2h-3l-.106-.447A1 1 0 0011 2H9zM7 
+                                            6h6v10H7V6z" clip-rule="evenodd" />
+                                        </svg> Delete This Item
+                                    </button>
                                 </label>
                             </div>
                     </div>
@@ -574,30 +618,39 @@
         }
     });
 
-    function handleDeleteItem(e) {
-    const deleteCheckbox = e.target;
-    const itemRow = deleteCheckbox.closest('.invoice-item');
-    
-        if (deleteCheckbox.checked) {
-            // Add fade-out animation
-            itemRow.style.opacity = '1';
-            let opacity = 1;
-            const fadeOut = setInterval(() => {
-                if (opacity <= 0) {
-                    clearInterval(fadeOut);
-                    itemRow.style.display = 'none';
-                }
-                itemRow.style.opacity = opacity;
-                opacity -= 0.1;
-            }, 30);
-        }
-        calculateTotal();
+    function handleDeleteItem(button) {
+    const itemRow = button.closest('.invoice-item');
+    const deleteInput = itemRow.querySelector('input[name$="-DELETE"]');
+
+    if (deleteInput) {
+        deleteInput.checked = true;
     }
-    document.addEventListener('change', function(e) {
-        if (e.target.matches('input[name$="-DELETE"]')) {
-            handleDeleteItem(e);
-        }
-    });
+
+        itemRow.style.opacity = '1';
+        let opacity = 1;
+        const fadeOut = setInterval(() => {
+            if (opacity <= 0) {
+                clearInterval(fadeOut);
+                itemRow.style.display = 'none';
+                calculateTotal();
+            }
+            itemRow.style.opacity = opacity;
+            opacity -= 0.1;
+        }, 30);
+    }
+
+    // Delegate click to delete button
+        document.addEventListener('click', function (e) {
+            const deleteBtn = e.target.closest('.delete-item');
+            if (deleteBtn) {
+                handleDeleteItem(deleteBtn);
+            }
+        });
+    // document.addEventListener('change', function(e) {
+    //     if (e.target.matches('input[name$="-DELETE"]')) {
+    //         handleDeleteItem(e);
+    //     }
+    // });
 
     document.getElementById('dropdownButton').addEventListener('click', function () {
         document.getElementById('dropdownMenu').classList.toggle('hidden');
@@ -776,5 +829,55 @@
             document.getElementById('id_customer_city').value = '';
         }
     });
+
+    ////////////////////////
+
+    // Customer dropdown handling
+const customerInput = document.getElementById('id_customer_name');
+const customerDropdown = document.getElementById('customers-dropdown');
+
+function filterCustomers(searchText) {
+    const options = customerDropdown.querySelectorAll('.customer-option');
+    options.forEach(option => {
+        const name = option.querySelector('td:first-child').textContent.toLowerCase();
+        option.style.display = name.includes(searchText.toLowerCase()) ? 'table-row' : 'none';
+    });
+}
+
+customerInput.addEventListener('input', function(e) {
+    const searchText = e.target.value;
+    filterCustomers(searchText);
+    customerDropdown.classList.remove('hidden');
+});
+
+customerInput.addEventListener('focus', function() {
+    filterCustomers(this.value);
+    customerDropdown.classList.remove('hidden');
+});
+
+// Handle customer selection
+customerDropdown.addEventListener('click', function(e) {
+    const row = e.target.closest('.customer-option');
+    if (row) {
+        customerInput.value = row.querySelector('td:first-child').textContent;
+        customerDropdown.classList.add('hidden');
+        
+        // Populate other fields
+        document.getElementById('id_customer_email').value = row.dataset.email;
+        document.getElementById('id_customer_contact').value = row.dataset.contact;
+        document.getElementById('id_customer_address').value = row.dataset.address;
+        document.getElementById('id_customer_country').value = row.dataset.country;
+        document.getElementById('id_customer_zip').value = row.dataset.zip;
+        document.getElementById('id_customer_state').value = row.dataset.state;
+        document.getElementById('id_customer_city').value = row.dataset.city;
+    }
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    if (!customerInput.contains(e.target) && !customerDropdown.contains(e.target)) {
+        customerDropdown.classList.add('hidden');
+    }
+});
 </script>
 {% endblock %}
