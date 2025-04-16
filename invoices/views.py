@@ -188,6 +188,7 @@ def invoice_update(request, pk):
         'title': f'Edit Invoice #{invoice.invoice_id}',
         'active_profile': invoice.profile,
         'profiles': profiles,
+        'products': products,
         'latest_products': latest_products,
         # 'customers': customers
     })
