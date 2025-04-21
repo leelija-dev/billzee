@@ -8,7 +8,7 @@ class InvoiceForm(forms.ModelForm):
         fields = ['customer_name', 'customer_email', 'customer_contact', 'customer_address', 'customer_country', 'customer_zip', 'customer_state', 'customer_city', 'billing_date', 'due_date', 'notes','status','gst_rate', 'currency']
         widgets = {
             'customer_name': forms.TextInput(attrs={
-                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm'
+                'class': 'block w-full rounded-md border-0 border-b-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm'
             }),
             'customer_email': forms.EmailInput(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm'
@@ -35,7 +35,7 @@ class InvoiceForm(forms.ModelForm):
             }),
             'billing_date': forms.DateInput(attrs={'type': 'date', 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm'}),
             'due_date': forms.DateInput(attrs={'type': 'date', 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm'}),
-            'notes': forms.Textarea(attrs={'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm', 'rows': 4}),
+            'notes': forms.Textarea(attrs={'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm', 'rows': 1}),
             'status': forms.HiddenInput(),
             'gst_rate': forms.HiddenInput(),
             'currency': forms.HiddenInput(),
