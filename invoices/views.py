@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_tags
+from datetime import date, timedelta
 
 import paypalrestsdk
 from cashfree_pg.api_client import Cashfree
@@ -80,6 +81,7 @@ def invoice_create(request):
         return redirect('users:profile_list')
 
     if request.method == 'POST':
+        print(request.POST)
         form = InvoiceForm(request.POST)
         # print(form)
         # return JsonResponse({'data': form.data})
@@ -99,8 +101,20 @@ def invoice_create(request):
             
             messages.success(request, 'Invoice created successfully.')
             return redirect('invoices:detail', pk=invoice.pk)
+            pass
+        else:
+            # Debugging: Print errors to console
+            print("Form errors:", form.errors)
+            print("Formset errors:", formset.errors)   
     else:
-        form = InvoiceForm()
+        # form = InvoiceForm()
+        initial_billing_date = date.today()
+        initial_due_date = date.today() + timedelta(days=4)
+        form = InvoiceForm(initial={
+            'billing_date': initial_billing_date,
+            'due_date': initial_due_date
+        })
+        # form = InvoiceForm(initial={'billing_date': initial_date})
         formset = InvoiceItemFormSet(queryset=InvoiceItem.objects.none())
     
     return render(request, 'invoices/invoice_form.html', {
@@ -113,6 +127,7 @@ def invoice_create(request):
         'products': products,
         'latest_products': latest_products,
     })
+
 
 @login_required
 def invoice_detail(request, pk):
@@ -155,13 +170,24 @@ def invoice_detail(request, pk):
 def invoice_update(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk, profile__user=request.user)
     profiles = Profile.objects.filter(user=request.user)
-    # customers = Invoice.objects.filter(profile=invoice.profile).values_list('customer_name', flat=True).distinct().order_by('customer_name')
     latest_products = Product.objects.values('item_name').annotate(max_id=Max('invoice_item_id')).order_by()
     products = Product.objects.filter(invoice_item_id__in=[p['max_id'] for p in latest_products]).values_list('item_name', 'item_price', flat=False).order_by('item_name')
+
     if request.method == 'POST':
-        # return JsonResponse({'data':request.POST})
-        form = InvoiceForm(request.POST, instance=invoice)
-        formset = InvoiceItemFormSet(request.POST, queryset=InvoiceItem.objects.filter(invoice=invoice))
+        post_data = request.POST.copy()
+        # Ensure all required fields are populated from the existing invoice if missing
+        required_fields = [
+            'customer_name', 'customer_email', 'customer_contact',
+            'customer_address', 'customer_country', 'customer_zip',
+            'customer_state', 'customer_city', 'billing_date', 'due_date','notes'
+        ]
+        for field in required_fields:
+            if not post_data.get(field):
+                post_data[field] = getattr(invoice, field) or ''
+
+        form = InvoiceForm(post_data, instance=invoice)
+        formset = InvoiceItemFormSet(post_data, queryset=InvoiceItem.objects.filter(invoice=invoice))
+        
         if form.is_valid() and formset.is_valid():
             form.save()
             instances = formset.save(commit=False)
@@ -177,6 +203,11 @@ def invoice_update(request, pk):
             
             messages.success(request, 'Invoice updated successfully.')
             return redirect('invoices:detail', pk=pk)
+        else:
+            # Log form errors for debugging
+            print("Form errors:", form.errors)
+            print("Formset errors:", formset.errors)
+            print("POST data:", post_data)  # Debugging
     else:
         form = InvoiceForm(instance=invoice)
         formset = InvoiceItemFormSet(queryset=InvoiceItem.objects.filter(invoice=invoice))
@@ -190,7 +221,6 @@ def invoice_update(request, pk):
         'profiles': profiles,
         'products': products,
         'latest_products': latest_products,
-        # 'customers': customers
     })
 
 @login_required

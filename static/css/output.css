@@ -133,6 +133,9 @@
   --tw-content: '';
 }
 
+.border-bottom {  /* 1px bottom border everywhere */
+  @apply border-b;
+}
 /*
 1. Use a consistent sensible line-height in all browsers.
 2. Prevent adjustments of font size after orientation changes in iOS.
@@ -2725,4 +2728,26 @@ input:checked + .toggle-bg {
 
 .rtl\:space-x-reverse:where([dir="rtl"], [dir="rtl"] *) > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 1;
+}
+
+/* custom css  */
+.forms-custom-border {
+  border: none;
+  outline: none;
+  border-bottom: 1px solid gray !important;
+}
+.forms-custom-border:focus {
+  border: none !important;
+  outline: none !important;
+  border-bottom: 1px solid #3b82f6 !important;
+}
+
+.error-message {
+  color: #c00;
+  font-size: 0.9em;
+  margin-top: 2px;
+  min-height: 1em;
+}
+.input-error {
+  border-color: #c00;
 }
