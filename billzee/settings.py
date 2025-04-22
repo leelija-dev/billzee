@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -132,3 +133,15 @@ CSRF_COOKIE_SECURE = True  # Only send CSRF cookie over HTTPS
 SESSION_COOKIE_SECURE = True  # Only send session cookie over HTTPS
 CSRF_COOKIE_HTTPONLY = True  # Prevent JavaScript access to CSRF cookie
 SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
+
+# payment setting 
+PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
+PAYPAL_SECRET = config('PAYPAL_SECRET')
+PAYPAL_MODE = config('PAYPAL_MODE')
+
+# Cashfree Settings
+CASHFREE_APP_ID = config("CASHFREE_APP_ID")
+CASHFREE_SECRET_KEY = config("CASHFREE_SECRET_KEY")
+CASHFREE_ENV = "SANDBOX"
+# CASHFREE_LIVE_MODE = config("CASHFREE_LIVE_MODE", "False").lower() == "true"
+CASHFREE_API_VERSION = "2023-08-01"

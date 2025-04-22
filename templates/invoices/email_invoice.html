@@ -306,8 +306,13 @@
         {% elif invoice.status == 'pending' %}
         <div class="payment-reminder">
             <p>Your payment is pending. Please make your payment by the due date: {{ invoice.due_date }}.</p>
-            <p><a href="{{ invoice.payment_link }}" target="_blank" style="text-decoration: none; color: #007BFF;" tabindex="0">
-                Click here to pay your Business</a>
+            <p>
+                <a href="{{ view_url }}?initiate_payment=true" 
+                target="_blank" 
+                style="text-decoration: none; color: #007BFF;" 
+                tabindex="0">
+                    Click here to pay your Invoice
+                </a>
             </p>
         </div>
         {% endif %}

@@ -81,32 +81,61 @@
         <form id="invoice-form" method="post" class="mt-2 space-y-6">
             {% csrf_token %}
 
-            <div class="grid grid-cols-3 gap-4 sm:grid-cols-1 sm:gap-1">
+            <div class="">
+                <div class="grid grid-cols-2 gap-1 sm:grid-cols-1 mt-2">
+                    <div>
+                    <label for="{{ form.customer_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Customer Email
+                    </label>
+                    {{ form.customer_email }}
+                    <div id="customers-dropdown" class="hidden absolute z-10 w-64 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <!-- <th class="px-4 py-2 text-left">Name</th> -->
+                                    <th class="px-4 py-2 text-left">Email</th>
+                                    <!-- <th class="px-4 py-2 text-left">Contact</th>
+                                    <th class="px-4 py-2 text-left">Address</th> -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for customer in customers %}
+                                <tr class="customer-option hover:bg-blue-50 cursor-pointer"
+                                    data-email="{{ customer.1|escapejs }}"
+                                    data-name="{{ customer.0|escapejs }}"
+                                    data-contact="{{ customer.2|escapejs }}"
+                                    data-address="{{ customer.3|escapejs }}"
+                                    data-country="{{ customer.4|escapejs }}"
+                                    data-zip="{{ customer.5|escapejs }}"
+                                    data-state="{{ customer.6|escapejs }}"
+                                    data-city="{{ customer.7|escapejs }}">
+                              <td class="px-4 py-2 border-t">{{ customer.1 }}</td>
+                            </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                    <!-- Add Customer Button -->
+                    <button id="add-customer-btn" data-modal-target="add-customer-modal" data-modal-toggle="add-customer-modal" class="hidden mt-2 text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2" type="button">
+                        Add New Customer
+                    </button>
+                    {% if form.customer_email.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.customer_email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="grid md:grid-cols-8 gap-1 hidden sm:grid-cols-1 mt-2" id="customer-details">
                 <div>
                     <label for="{{ form.customer_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
                         Customer Name
                     </label>
                     {{ form.customer_name }}
-                    <datalist id="customers-list">
-                        {% for customer in customers %}
-                        <option value="{{ customer.0}}">
-                        </option>
-                        {% endfor %}
-                    </datalist>
                     {% if form.customer_name.errors %}
                     <p class="mt-2 text-sm text-red-600">{{ form.customer_name.errors.0 }}</p>
                     {% endif %}
                 </div>
-                <div>
-                    <label for="{{ form.customer_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                        Customer Email
-                    </label>
-                    {{ form.customer_email }}
-                    {% if form.customer_email.errors %}
-                    <p class="mt-2 text-sm text-red-600">{{ form.customer_email.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                <!-- Customer Contact -->
+                
                 <div>
                     <label for="{{ form.customer_contact.id_for_label }}" class="block text-sm font-medium text-gray-700">
                         Customer Contact
@@ -125,7 +154,7 @@
                     <p class="mt-2 text-sm text-red-600">{{ form.customer_address.errors.0 }}</p>
                     {% endif %}
                 </div>
-                <!-- Customer Country -->
+                
                 <div>
                     <label for="{{ form.customer_country.id_for_label }}" class="block text-sm font-medium text-gray-700">
                         Customer Country
@@ -135,7 +164,7 @@
                     <p class="mt-2 text-sm text-red-600">{{ form.customer_country.errors.0 }}</p>
                     {% endif %}
                 </div>
-                <!-- Customer Zip -->
+               
                 <div>
                     <label for="{{ form.customer_zip.id_for_label }}" class="block text-sm font-medium text-gray-700">
                         Customer Zip
@@ -145,7 +174,7 @@
                     <p class="mt-2 text-sm text-red-600">{{ form.customer_zip.errors.0 }}</p>
                     {% endif %}
                 </div>
-                <!-- Customer State -->
+                
                 <div>
                     <label for="{{ form.customer_state.id_for_label }}" class="block text-sm font-medium text-gray-700">
                         Customer State
@@ -156,7 +185,7 @@
                     {% endif %}
                 </div>
                 
-                <!-- Customer City -->
+               
                 <div>
                     <label for="{{ form.customer_city.id_for_label }}" class="block text-sm font-medium text-gray-700">
                         Customer City
@@ -185,16 +214,90 @@
                     <p class="mt-2 text-sm text-red-600">{{ form.due_date.errors.0 }}</p>
                     {% endif %}
                 </div>
+                <div>
+                    <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Notes
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.notes.errors.0 }}</p>
+                    {% endif %}
+                </div>
             </div>
 
-            <div>
-                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                    Notes
-                </label>
-                {{ form.notes }}
-                {% if form.notes.errors %}
-                <p class="mt-2 text-sm text-red-600">{{ form.notes.errors.0 }}</p>
-                {% endif %}
+            <!-- Add Customer Modal -->
+            <div id="add-customer-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+                <div class="relative p-4 w-full max-w-2xl max-h-full">
+                    <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+                        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                                Add New Customer
+                            </h3>
+                            <button type="button" class="text-red-600 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="add-customer-modal">
+                                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                </svg>
+                                <span class="sr-only">Close modal</span>
+                            </button>
+                        </div>
+                        <div class="p-4 md:p-5 space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="modal_customer_email" class="block text-sm font-medium text-gray-700">Email</label>
+                                    <input type="email" id="modal_customer_email" name="customer_email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="modal_customer_name" class="block text-sm font-medium text-gray-700">Name</label>
+                                    <input type="text" id="modal_customer_name" name="customer_name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="modal_customer_contact" class="block text-sm font-medium text-gray-700">Contact</label>
+                                    <input type="text" id="modal_customer_contact" name="customer_contact" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="modal_customer_address" class="block text-sm font-medium text-gray-700">Address</label>
+                                    <input type="text" id="modal_customer_address" name="customer_address" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="modal_customer_country" class="block text-sm font-medium text-gray-700">Country</label>
+                                    <input type="text" id="modal_customer_country" name="customer_country" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="modal_customer_zip" class="block text-sm font-medium text-gray-700">Zip</label>
+                                    <input type="text" id="modal_customer_zip" name="customer_zip" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="modal_customer_state" class="block text-sm font-medium text-gray-700">State</label>
+                                    <input type="text" id="modal_customer_state" name="customer_state" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="modal_customer_city" class="block text-sm font-medium text-gray-700">City</label>
+                                    <input type="text" id="modal_customer_city" name="customer_city" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="modal_billing_date" class="block text-sm font-medium text-gray-700">Billing Date</label>
+                                    <input type="date" id="modal_billing_date" name="billing_date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="modal_due_date" class="block text-sm font-medium text-gray-700">Due Date</label>
+                                    <input type="date" id="modal_due_date" name="due_date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                <div class="col-span-2">
+                                    <label for="modal_notes" class="block text-sm font-medium text-gray-700">Notes</label>
+                                    <textarea id="modal_notes" name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
+                            <button id="save-customer-btn" data-modal-hide="add-customer-modal" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                Save
+                            </button>
+                            <button data-modal-hide="add-customer-modal" type="button" class="ml-3 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="mt-8">
@@ -298,10 +401,10 @@
                     </div>
                 </div>
 
-                <div id="invoice-items">
+                <div id="invoice-items" class="bg-gray-50">
                     {% if formset.forms %}
                     {% for form in formset %}
-                    <div class="invoice-item border-b rounded p-4 mb-4">
+                    <div class="invoice-item border-b rounded px-2 pt-3 pb-1 mb-1">
                         {{ form.id }}
                         <div class="grid grid-cols-4 gap-y-6 gap-x-4 sm:grid-cols-4">
                             <div>
@@ -331,8 +434,15 @@
                         </div>
                         <div class="mt-2 flex justify-end">
                             <label class="inline-flex items-center">
-                                {{ form.DELETE }}
-                                <span class="ml-2 text-sm text-red-600">Delete this item</span>
+                                {{ form.DELETE.as_hidden }}
+                                <button type="button" class="delete-item text-red-600 hover:text-red-800 flex align-top text-sm font-semibold">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4.6 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7 4H4a1 1 0 000 
+                                        2h1v10a2 2 0 002 2h6a2 2 0 002-2V6h1a1 1 0 
+                                        100-2h-3l-.106-.447A1 1 0 0011 2H9zM7 
+                                        6h6v10H7V6z" clip-rule="evenodd" />
+                                    </svg>Delete Item
+                                </button>
                             </label>
                         </div>
                     </div>
@@ -340,12 +450,34 @@
                     {% endif %}
                 </div>
                 <!-- Datalist for Product Items -->
-                <datalist id="product-list">
+                <!-- <datalist id="product-list">
                     {% for product in products %}
                         <option value="{{ product.0 }}">
                     {% endfor %}
-                </datalist>
-                <div class="flex justify-end">
+                </datalist> -->
+                <!-- Product dropdown container -->
+                <div id="product-dropdown" class="hidden absolute z-10 w-72 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Item Name</th>
+                                <th class="px-4 py-2 text-left">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr class="product-option hover:bg-blue-50 cursor-pointer" 
+                                data-price="{{ product.1 }}">
+                                <td class="px-4 py-2 border-t">{{ product.0 }}</td>
+                                <td class="px-4 py-2 border-t">{{ product.1 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div id="no-results" class="hidden p-4 text-gray-500">No matching products found</div>
+                </div>
+                
+                <div class="flex justify-end mt-3">
                     <button type="button" id="add-item"
                         class="flex items-center px-3 py-2 border border-blue-600 shadow-sm text-sm font-medium rounded-md text-white bg-blue-500  hover:bg-white hover:text-blue-600">
                         Add Item
@@ -370,14 +502,21 @@
                         </div>
                             <div class="mt-2 flex justify-end">
                                 <label class="inline-flex items-center">
-                                    {{ formset.empty_form.DELETE }}
-                                    <span class="ml-2 text-sm text-red-600">Delete this item</span>
+                                    {{ formset.empty_form.DELETE.as_hidden }}
+                                    <button type="button" class="delete-item text-red-600 hover:text-red-800 flex align-middle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7 4H4a1 1 0 000 
+                                            2h1v10a2 2 0 002 2h6a2 2 0 002-2V6h1a1 1 0 
+                                            100-2h-3l-.106-.447A1 1 0 0011 2H9zM7 
+                                            6h6v10H7V6z" clip-rule="evenodd" />
+                                        </svg> Delete Item
+                                    </button>
                                 </label>
                             </div>
                     </div>
                 </div>
             </div>
-            <div class="w-screen flex justify-between max-w-7xl mx-auto fixed bottom-1 bg-gray-700 p-1 right-0 left-0 lg:pl-4 lg:pr-4 rounded-t">
+            <div class="w-screen flex justify-between max-w-7xl mx-auto fixed bottom-1 bg-gray-700 p-2 right-0 left-0 lg:pl-2 lg:pr-2 rounded-t">
                 <div>
                     <a href="{% url 'invoices:dashboard' %}"
                         class="inline-flex items-center px-4 py-2 border-none shadow-sm text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-700">
@@ -456,11 +595,11 @@
     };
     
     //--- fetch product data ---//
-    const productData = {
-        {% for product in products %}
-            "{{ product.0|escapejs }}": "{{ product.1 }}",
-        {% endfor %}
-    };
+    // const productData = {
+    //     {% for product in products %}
+    //         "{{ product.0|escapejs }}": "{{ product.1 }}",
+    //     {% endfor %}
+    // };
 
 
     function updateCurrencySymbols(currency) {
@@ -492,24 +631,24 @@
     });
 
     //------- autofill item price based on item -----//
-    document.getElementById('invoice-items').addEventListener('input', function(e) {
-        if (e.target.name && e.target.name.endsWith('-item')) {
-            const selectedItem = e.target.value;
-            if (productData.hasOwnProperty(selectedItem)) {
-                const price = productData[selectedItem];
-                const itemRow = e.target.closest('.invoice-item');
-                if (itemRow) {
-                    const unitPriceInput = itemRow.querySelector('input[name$="-unit_price"]');
-                    if (unitPriceInput) {
-                        unitPriceInput.value = price;
-                        unitPriceInput.dispatchEvent(new Event('input')); // Trigger total recalculation
-                    } else {
-                        console.log('Unit price input not found in this row');
-                    }
-                }
-            }
-        }
-    });
+    // document.getElementById('invoice-items').addEventListener('input', function(e) {
+    //     if (e.target.name && e.target.name.endsWith('-item')) {
+    //         const selectedItem = e.target.value;
+    //         if (productData.hasOwnProperty(selectedItem)) {
+    //             const price = productData[selectedItem];
+    //             const itemRow = e.target.closest('.invoice-item');
+    //             if (itemRow) {
+    //                 const unitPriceInput = itemRow.querySelector('input[name$="-unit_price"]');
+    //                 if (unitPriceInput) {
+    //                     unitPriceInput.value = price;
+    //                     unitPriceInput.dispatchEvent(new Event('input')); // Trigger total recalculation
+    //                 } else {
+    //                     console.log('Unit price input not found in this row');
+    //                 }
+    //             }
+    //         }
+    //     }
+    // });
 
 
     function calculateTotal() {
@@ -574,30 +713,39 @@
         }
     });
 
-    function handleDeleteItem(e) {
-    const deleteCheckbox = e.target;
-    const itemRow = deleteCheckbox.closest('.invoice-item');
-    
-        if (deleteCheckbox.checked) {
-            // Add fade-out animation
-            itemRow.style.opacity = '1';
-            let opacity = 1;
-            const fadeOut = setInterval(() => {
-                if (opacity <= 0) {
-                    clearInterval(fadeOut);
-                    itemRow.style.display = 'none';
-                }
-                itemRow.style.opacity = opacity;
-                opacity -= 0.1;
-            }, 30);
-        }
-        calculateTotal();
+    function handleDeleteItem(button) {
+    const itemRow = button.closest('.invoice-item');
+    const deleteInput = itemRow.querySelector('input[name$="-DELETE"]');
+
+    if (deleteInput) {
+        deleteInput.checked = true;
     }
-    document.addEventListener('change', function(e) {
-        if (e.target.matches('input[name$="-DELETE"]')) {
-            handleDeleteItem(e);
-        }
-    });
+
+        itemRow.style.opacity = '1';
+        let opacity = 1;
+        const fadeOut = setInterval(() => {
+            if (opacity <= 0) {
+                clearInterval(fadeOut);
+                itemRow.style.display = 'none';
+                calculateTotal();
+            }
+            itemRow.style.opacity = opacity;
+            opacity -= 0.1;
+        }, 30);
+    }
+
+    // Delegate click to delete button
+        document.addEventListener('click', function (e) {
+            const deleteBtn = e.target.closest('.delete-item');
+            if (deleteBtn) {
+                handleDeleteItem(deleteBtn);
+            }
+        });
+    // document.addEventListener('change', function(e) {
+    //     if (e.target.matches('input[name$="-DELETE"]')) {
+    //         handleDeleteItem(e);
+    //     }
+    // });
 
     document.getElementById('dropdownButton').addEventListener('click', function () {
         document.getElementById('dropdownMenu').classList.toggle('hidden');
@@ -731,48 +879,278 @@
         // Disable customer details fields if editing
         const isEditing = {% if invoice.id %}true{% else %}false{% endif %};
         if (isEditing) {
+            customerDetails.classList.remove('hidden');
             document.querySelectorAll('input[name^="customer_"], textarea[name^="customer_"]').forEach(field => {
-                field.disabled = true;
+                field.readOnly = true; 
                 field.style.background = '#d9d9d9';  
                 field.style.cursor = 'no-drop'; 
             });
+            const editDropdown = document.getElementById('customers-dropdown');
+            if(editDropdown){
+                editDropdown.style.display = 'none';
+            }
+            customerDetails.classList.remove('hidden');
+        }else{
+            customerDetails.classList.add('hidden');
         }
     });
 
 /// -------------for customer details autofill----------//
-    const customerData = {
-        {% for customer in customers %}
-            "{{ customer.0|escapejs }}": {
-                email: "{{ customer.1|escapejs }}",
-                contact: "{{ customer.2|escapejs }}",
-                address: "{{ customer.3|escapejs }}",
-                country: "{{ customer.4|escapejs }}",
-                zip: "{{ customer.5|escapejs }}",
-                state: "{{ customer.6|escapejs }}",
-                city: "{{ customer.7|escapejs }}",
-            },
-        {% endfor %}
-    };
+const customerData = {
+    {% for customer in customers %}
+    "{{ customer.1|escapejs }}": {
+      name:    "{{ customer.0|escapejs }}",
+      contact: "{{ customer.2|escapejs }}",
+      address: "{{ customer.3|escapejs }}",
+      country: "{{ customer.4|escapejs }}",
+      zip:     "{{ customer.5|escapejs }}",
+      state:   "{{ customer.6|escapejs }}",
+      city:    "{{ customer.7|escapejs }}"
+    },
+    {% endfor %}
+  };
 
-    
-    document.getElementById('id_customer_name').addEventListener('input', function(e) {
-        const customerName = e.target.value;
-        if (customerData.hasOwnProperty(customerName)) {
-            document.getElementById('id_customer_email').value = customerData[customerName].email;
-            document.getElementById('id_customer_contact').value = customerData[customerName].contact;
-            document.getElementById('id_customer_address').value = customerData[customerName].address;
-            document.getElementById('id_customer_country').value = customerData[customerName].country;
-            document.getElementById('id_customer_zip').value = customerData[customerName].zip;
-            document.getElementById('id_customer_state').value = customerData[customerName].state;
-            document.getElementById('id_customer_city').value = customerData[customerName].city;
+  const saveBtn         = document.getElementById('save-customer-btn');
+  const detailsPanel    = document.getElementById('customerDetailsShow');
+    // document.getElementById('id_customer_name').addEventListener('input', function(e) {
+    //     const customerName = e.target.value;
+    //     if (customerData.hasOwnProperty(customerName)) {
+    //         document.getElementById('id_customer_email').value = customerData[customerName].email;
+    //         document.getElementById('id_customer_contact').value = customerData[customerName].contact;
+    //         document.getElementById('id_customer_address').value = customerData[customerName].address;
+    //         document.getElementById('id_customer_country').value = customerData[customerName].country;
+    //         document.getElementById('id_customer_zip').value = customerData[customerName].zip;
+    //         document.getElementById('id_customer_state').value = customerData[customerName].state;
+    //         document.getElementById('id_customer_city').value = customerData[customerName].city;
+    //     } else {
+    //         document.getElementById('id_customer_email').value = '';
+    //         document.getElementById('id_customer_contact').value = '';
+    //         document.getElementById('id_customer_address').value = '';
+    //         document.getElementById('id_customer_country').value = '';
+    //         document.getElementById('id_customer_zip').value = '';
+    //         document.getElementById('id_customer_state').value = '';
+    //         document.getElementById('id_customer_city').value = '';
+    //     }
+    // });
+//     // Show & populate details
+  function showCustomerDetails({ name, contact, address, country, state, city, zip }) {
+    document.getElementById('customer-name').textContent    = name;
+    document.getElementById('customer-contact').textContent = contact;
+    document.getElementById('customer-address').textContent = address;
+    document.getElementById('customer-country').textContent = country;
+    document.getElementById('customer-state').textContent   = state;
+    document.getElementById('customer-city').textContent    = city;
+    document.getElementById('customer-zip').textContent     = zip;
+    detailsPanel.classList.remove('hidden');
+  }
+    ////////////////////////
+
+    // Customer dropdown handling
+    const emailInput    = document.getElementById('id_customer_email');
+    const dropdown      = document.getElementById('customers-dropdown');
+    const rows          = dropdown.querySelectorAll('.customer-option');
+    const customerDetails = document.getElementById('customer-details');
+    const addCustomerBtn = document.getElementById('add-customer-btn');
+
+    function filterCustomers(text) {
+        rows.forEach(row => {
+        const e = row.dataset.email.toLowerCase();
+        row.style.display = e.includes(text.toLowerCase()) ? 'table-row' : 'none';
+        });
+    }
+
+    function emailExists(email) {
+        return Object.keys(customerData).includes(email);
+    }
+
+    emailInput.addEventListener('input', () => {
+        const email = emailInput.value.trim();
+        filterCustomers(email);
+        dropdown.classList.remove('hidden');
+        if (email && !emailExists(email)) {
+            addCustomerBtn.classList.remove('hidden');
         } else {
-            document.getElementById('id_customer_email').value = '';
-            document.getElementById('id_customer_contact').value = '';
-            document.getElementById('id_customer_address').value = '';
-            document.getElementById('id_customer_country').value = '';
-            document.getElementById('id_customer_zip').value = '';
-            document.getElementById('id_customer_state').value = '';
-            document.getElementById('id_customer_city').value = '';
+            addCustomerBtn.classList.add('hidden');
+        }
+        if (!email) customerDetails.classList.add('hidden');
+    });
+
+    // show & filter on focus or typing in the email field
+    emailInput.addEventListener('focus',  () => {
+        filterCustomers(emailInput.value);
+        dropdown.classList.remove('hidden');
+    });
+    // emailInput.addEventListener('input', () => {
+    //     filterCustomers(emailInput.value);
+    //     dropdown.classList.remove('hidden');
+    //     // Hide customer details if email is empty
+    //     if (!emailInput.value.trim()) {
+    //         customerDetails.classList.add('hidden');
+    //     }
+    // });
+
+    // when you click a row, populate all fields
+    dropdown.addEventListener('click', e => {
+        const row = e.target.closest('.customer-option');
+        if (!row) return;
+        const data = row.dataset;
+
+        Object.keys(data).forEach(key => {
+        const el = document.getElementById('id_customer_' + key);
+        if (el) el.value = data[key];
+        });
+        dropdown.classList.add('hidden');
+        // Show customer details when a customer is selected
+        customerDetails.classList.remove('hidden');
+    });
+
+    // close dropdown when clicking outside
+    document.addEventListener('click', e => {
+        if (!emailInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+        }
+    });
+
+    addCustomerBtn.addEventListener('click', () => {
+        const email = emailInput.value.trim();
+        document.getElementById('modal_customer_email').value = email;
+    });
+
+    document.getElementById('save-customer-btn').addEventListener('click', () => {
+        const email = document.getElementById('modal_customer_email').value;
+        const name = document.getElementById('modal_customer_name').value;
+        const contact = document.getElementById('modal_customer_contact').value;
+        const address = document.getElementById('modal_customer_address').value;
+        const country = document.getElementById('modal_customer_country').value;
+        const zip = document.getElementById('modal_customer_zip').value;
+        const state = document.getElementById('modal_customer_state').value;
+        const city = document.getElementById('modal_customer_city').value;
+        const billingDate = document.getElementById('modal_billing_date').value;
+        const dueDate = document.getElementById('modal_due_date').value;
+        const notes = document.getElementById('modal_notes').value;
+
+        document.getElementById('id_customer_email').value = email;
+        document.getElementById('id_customer_name').value = name;
+        document.getElementById('id_customer_contact').value = contact;
+        document.getElementById('id_customer_address').value = address;
+        document.getElementById('id_customer_country').value = country;
+        document.getElementById('id_customer_zip').value = zip;
+        document.getElementById('id_customer_state').value = state;
+        document.getElementById('id_customer_city').value = city;
+        document.getElementById('id_billing_date').value = billingDate;
+        document.getElementById('id_due_date').value = dueDate;
+        document.getElementById('id_notes').value = notes;
+
+        customerDetails.classList.remove('hidden');
+    });
+
+
+////------ for custome Product dropdown handling ---------/////
+
+    let activeItemInput = null;
+    const productDropdown = document.getElementById('product-dropdown');
+    const noResults = document.getElementById('no-results');
+
+    // Return true if there's at least one match, false otherwise
+    function filterProducts(searchText) {
+        let hasMatches = false;
+        const options = productDropdown.querySelectorAll('.product-option');
+
+        options.forEach(option => {
+        const name = option.querySelector('td:first-child').textContent.toLowerCase();
+        const match = name.includes(searchText.toLowerCase());
+        option.style.display = match ? 'table-row' : 'none';
+        if (match) hasMatches = true;
+        });
+
+        return hasMatches;
+    }
+
+    function showProductDropdown(inputElement) {
+        activeItemInput = inputElement;
+        const rect = inputElement.getBoundingClientRect();
+        productDropdown.style.top  = `${rect.bottom + window.scrollY + 5}px`;
+        productDropdown.style.left = `${rect.left   + window.scrollX}px`;
+
+        const hasMatches = filterProducts(inputElement.value);
+        if (hasMatches) {
+        productDropdown.classList.remove('hidden');
+        } else {
+        productDropdown.classList.add('hidden');
+        }
+    }
+
+    // Open on focus/click (same as before)
+    document.addEventListener('focus', function(e) {
+        if (e.target.matches('input[name$="-item"]')) {
+        showProductDropdown(e.target);
+        }
+    }, true);
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('input[name$="-item"]')) {
+        showProductDropdown(e.target);
+        }
+    });
+
+    // Handle product selection (same as before)
+    productDropdown.addEventListener('click', function(e) {
+        const row = e.target.closest('.product-option');
+        if (row && activeItemInput) {
+        activeItemInput.value = row.querySelector('td:first-child').textContent;
+        const unitPriceInput = activeItemInput.closest('.invoice-item')
+            .querySelector('input[name$="-unit_price"]');
+        unitPriceInput.value = row.dataset.price;
+        unitPriceInput.dispatchEvent(new Event('input'));
+        productDropdown.classList.add('hidden');
+        }
+    });
+
+    // Close dropdown when clicking outside (same as before)
+    document.addEventListener('click', function(e) {
+        if (!e.target.matches('input[name$="-item"]') && !productDropdown.contains(e.target)) {
+        productDropdown.classList.add('hidden');
+        }
+    });
+
+    // On every keystroke in the item‑field:
+    document.addEventListener('input', function(e) {
+        if (!e.target.matches('input[name$="-item"]')) return;
+
+        const input     = e.target;
+        const container = input.closest('.invoice-item');
+        const hasMatches = filterProducts(input.value);
+
+        // show/hide dropdown based on matches
+        if (hasMatches) {
+        productDropdown.classList.remove('hidden');
+        } else {
+        productDropdown.classList.add('hidden');
+        }
+
+        // find exact match (case‑insensitive)
+        const options = Array.from(productDropdown.querySelectorAll('.product-option'));
+        const exactMatch = options.find(opt =>
+        opt.querySelector('td:first-child').textContent.trim().toLowerCase() ===
+        input.value.trim().toLowerCase()
+        );
+
+        // grab the other inputs
+        const unitPriceInput = container.querySelector('input[name$="-unit_price"]');
+        const quantityInput  = container.querySelector('input[name$="-quantity"]');
+        const discountInput  = container.querySelector('input[name$="-discount"]');
+
+        if (exactMatch) {
+        // populate price if it's an exact product
+        unitPriceInput.value = exactMatch.dataset.price;
+        unitPriceInput.dispatchEvent(new Event('input'));
+        } else {
+        // clear all if no exact match
+        unitPriceInput.value = '';
+        quantityInput.value  = '';
+        discountInput.value  = '';
+        unitPriceInput.dispatchEvent(new Event('input'));
+        quantityInput.dispatchEvent(new Event('input'));
+        discountInput.dispatchEvent(new Event('input'));
         }
     });
 </script>

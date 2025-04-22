@@ -14,9 +14,16 @@ urlpatterns = [
     path('<int:pk>/delete/', views.invoice_delete, name='delete'),
     path('<int:pk>/send/', views.send_invoice, name='send'),
     path('<int:pk>/activate/', views.invoice_profile_activate, name='invoice_profile_activate'),
+    path('pdfgenerate/<str:invoice_id>/download/', views.invoice_pdf_view, name='download_invoice'),
+
+    # PayPal Payment URL
+    path('paypal_return/', views.paypal_return, name='paypal_return'),
     path('view/<str:uuid>/', views.customer_invoice_view, name='customer_view'),
-    path('invoice/<str:invoice_id>/download/', views.invoice_pdf_view, name='download_invoice'),
-    
+
+    # Cashfree Payment URL
+    path('cashfree-payment/<str:uuid>/', views.cashfree_payment, name='cashfree_payment'),
+    path('cashfree-return/', views.cashfree_return, name='cashfree_return'),
+
     # Invoice Customer Url
     path('customer/', views.customer_list, name='customer_list'), 
     path('customer/<str:customer_id>/edit/', views.customer_edit, name='customer_edit'),
