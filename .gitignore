@@ -1,9 +1,13 @@
 # environment
 _binvoice
+.env
+env/
+
+db.sqlite3
+*.log
 
 # modules
 node_modules
-<<<<<<< HEAD
 *.log
 *.pot
 *.pyc
@@ -551,10 +555,3 @@ env/
 *.coverage
 *.cover
 *.env
-=======
-
-.env
-env/
-db.sqlite3
-*.log
->>>>>>> 7a71b94c5532bb719fa53257950db3f3808ffd0d
