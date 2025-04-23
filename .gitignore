@@ -1,10 +1,26 @@
-# environment
-_binvoice
-
-# modules
-node_modules
-
+# Logs
+cashfree.log
+debug.log
 .env
+# Environments
 env/
-db.sqlite3
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Node modules
+node_modules/
+
+# Django Migrations / Cache
 *.log
+*.sqlite3
+db.sqlite3
+*.pyc
+
+# Specific files
+invoices/__pycache__/
+invoices/migrations/__pycache__/
+users/__pycache__/
+users/migrations/__pycache__/
+users/templatetags/__pycache__/
