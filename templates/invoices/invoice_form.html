@@ -81,7 +81,7 @@
         <form id="invoice-form" method="post" class="mt-2 space-y-6">
             {% csrf_token %}
 
-            {% if form.errors or formset.errors %}
+            <!-- {% if form.errors or formset.errors %}
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                 <strong class="font-bold">Errors:</strong>
                 <ul>
@@ -93,19 +93,6 @@
                     {% endfor %}
                 </ul>
             </div>
-            {% endif %}
-            <!-- Hidden inputs for customer fields when editing
-            {% if invoice.id %}
-            <input type="hidden" name="customer_email" value="{{ form.customer_email.value|default:'' }}">
-            <input type="hidden" name="customer_name" value="{{ form.customer_name.value|default:'' }}">
-            <input type="hidden" name="customer_contact" value="{{ form.customer_contact.value|default:'' }}">
-            <input type="hidden" name="customer_address" value="{{ form.customer_address.value|default:'' }}">
-            <input type="hidden" name="customer_country" value="{{ form.customer_country.value|default:'' }}">
-            <input type="hidden" name="customer_zip" value="{{ form.customer_zip.value|default:'' }}">
-            <input type="hidden" name="customer_state" value="{{ form.customer_state.value|default:'' }}">
-            <input type="hidden" name="customer_city" value="{{ form.customer_city.value|default:'' }}">
-            <input type="hidden" name="billing_date" value="{{ form.billing_date.value|default:'' }}">
-            <input type="hidden" name="due_date" value="{{ form.due_date.value|default:'' }}">
             {% endif %} -->
             <div class="">
                 <div class="grid grid-cols-2 gap-1 sm:grid-cols-1 mt-2">
@@ -271,52 +258,62 @@
                                 <div>
                                     <label for="modal_customer_email" class="block text-sm font-medium text-gray-700">Email</label>
                                     <input type="email" id="modal_customer_email" name="modal_customer_email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                    <span id="email-error" class="text-red-500 text-sm hidden">Email is required.</span>
+                                    <span id="modal_customer_email_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                                 <div>
                                     <label for="modal_customer_name" class="block text-sm font-medium text-gray-700">Name</label>
                                     <input type="text" id="modal_customer_name" name="modal_customer_name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <span id="modal_customer_name_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                                 <div>
                                     <label for="modal_customer_contact" class="block text-sm font-medium text-gray-700">Contact</label>
                                     <input type="text" id="modal_customer_contact" name="modal_customer_contact" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <span id="modal_customer_contact_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                                 <div>
                                     <label for="modal_customer_address" class="block text-sm font-medium text-gray-700">Address</label>
                                     <input type="text" id="modal_customer_address" name="modal_customer_address" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <span id="modal_customer_address_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                                 <div>
                                     <label for="modal_customer_country" class="block text-sm font-medium text-gray-700">Country</label>
                                     <input type="text" id="modal_customer_country" name="modal_customer_country" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <span id="modal_customer_country_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                                 <div>
                                     <label for="modal_customer_zip" class="block text-sm font-medium text-gray-700">Zip</label>
                                     <input type="text" id="modal_customer_zip" name="modal_customer_zip" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <span id="modal_customer_zip_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                                 <div>
                                     <label for="modal_customer_state" class="block text-sm font-medium text-gray-700">State</label>
                                     <input type="text" id="modal_customer_state" name="modal_customer_state" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <span id="modal_customer_state_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                                 <div>
                                     <label for="modal_customer_city" class="block text-sm font-medium text-gray-700">City</label>
                                     <input type="text" id="modal_customer_city" name="modal_customer_city" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <span id="modal_customer_city_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                                 <div>
                                     <label for="modal_billing_date" class="block text-sm font-medium text-gray-700">Billing Date</label>
                                     <input type="date" id="modal_billing_date" name="modal_billing_date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <span id="modal_billing_date_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                                 <div>
                                     <label for="modal_due_date" class="block text-sm font-medium text-gray-700">Due Date</label>
                                     <input type="date" id="modal_due_date" name="modal_due_date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <span id="modal_due_date_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                                 <div class="col-span-2">
                                     <label for="modal_notes" class="block text-sm font-medium text-gray-700">Notes</label>
                                     <textarea id="modal_notes" name="modal_notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                                    <span id="modal_notes_error" class="text-red-500 text-sm hidden"></span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex justify-end items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
-                            <button id="save-customer-btn" data-modal-hide="add-customer-modal" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                            <button id="save-customer-btn" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                                 Save
                             </button>
                             <button data-modal-hide="add-customer-modal" type="button" class="ml-3 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
@@ -906,10 +903,10 @@
         // Disable customer details fields if editing
         const isEditing = {% if invoice.id %}true{% else %}false{% endif %};
 
-        if (!isEditing && !document.getElementById('status-input').value) {
-            document.getElementById('status-input').value = 'pending';
-            document.getElementById('dropdownStatus').textContent = 'Status: Pending';
-        }
+        //if (!isEditing && !document.getElementById('status-input').value) {
+         //   document.getElementById('status-input').value = 'pending';
+         //   document.getElementById('dropdownStatus').textContent = 'Status: Pending';
+        //}
         if (isEditing) {
             customerDetails.classList.remove('hidden');
             document.querySelectorAll('input[name^="customer_"], textarea[name^="customer_"]').forEach(field => {
@@ -1035,52 +1032,106 @@ const customerData = {
         document.getElementById('modal_customer_email').value = email;
     });
 
-    document.getElementById('save-customer-btn').addEventListener('click', () => {
-        const email = document.getElementById('modal_customer_email').value;
-        const name = document.getElementById('modal_customer_name').value;
-        const contact = document.getElementById('modal_customer_contact').value;
-        const address = document.getElementById('modal_customer_address').value;
-        const country = document.getElementById('modal_customer_country').value;
-        const zip = document.getElementById('modal_customer_zip').value;
-        const state = document.getElementById('modal_customer_state').value;
-        const city = document.getElementById('modal_customer_city').value;
-        const billingDate = document.getElementById('modal_billing_date').value;
-        const dueDate = document.getElementById('modal_due_date').value;
-        const notes = document.getElementById('modal_notes').value;
+    document.getElementById('save-customer-btn')
+  .addEventListener('click', function (e) {
+    // 1) Clear previous errors
+    document
+      .querySelectorAll('#add-customer-modal .text-red-500')
+      .forEach(err => {
+        err.classList.add('hidden');
+        err.textContent = '';
+      });
 
-        if (email === '') {
-            console.log('Email is empty');
+    // 2) Grab values
+    const email       = document.getElementById('modal_customer_email').value.trim();
+    const name        = document.getElementById('modal_customer_name').value.trim();
+    const contact     = document.getElementById('modal_customer_contact').value.trim();
+    const address     = document.getElementById('modal_customer_address').value.trim();
+    const country     = document.getElementById('modal_customer_country').value.trim();
+    const zip         = document.getElementById('modal_customer_zip').value.trim();
+    const state       = document.getElementById('modal_customer_state').value.trim();
+    const city        = document.getElementById('modal_customer_city').value.trim();
+    const billingDate = document.getElementById('modal_billing_date').value;
+    const dueDate     = document.getElementById('modal_due_date').value;
+    const notes       = document.getElementById('modal_notes').value.trim();
 
-            // Optionally show an inline error message
-            const emailError = document.getElementById('email-error');
-            if (emailError) {
-                emailError.textContent = 'Email is required.';
-                emailError.classList.remove('hidden');
-            }
+    let isValid = true;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-            // Prevent further execution
-            return;
-        } else {
-            // Hide error if previously shown
-            const emailError = document.getElementById('email-error');
-            if (emailError) {
-                emailError.classList.add('hidden');
-            }
-        }
-        document.getElementById('id_customer_email').value = email;
-        document.getElementById('id_customer_name').value = name;
-        document.getElementById('id_customer_contact').value = contact;
-        document.getElementById('id_customer_address').value = address;
-        document.getElementById('id_customer_country').value = country;
-        document.getElementById('id_customer_zip').value = zip;
-        document.getElementById('id_customer_state').value = state;
-        document.getElementById('id_customer_city').value = city;
-        document.getElementById('id_billing_date').value = billingDate;
-        document.getElementById('id_due_date').value = dueDate;
-        document.getElementById('id_notes').value = notes;
+    // 3) Validate fields (same as before)…
+    if (!email) {
+      showError('modal_customer_email', 'Email is required.');
+      isValid = false;
+    } else if (!emailRegex.test(email)) {
+      showError('modal_customer_email', 'Please enter a valid email address.');
+      isValid = false;
+    }
+    if (!name) {
+      showError('modal_customer_name', 'Name is required.');
+      isValid = false;
+    }
+    if (!billingDate) {
+      showError('modal_billing_date', 'Billing date is required.');
+      isValid = false;
+    }
+    if (!dueDate) {
+      showError('modal_due_date', 'Due date is required.');
+      isValid = false;
+    } else if (billingDate && new Date(dueDate) < new Date(billingDate)) {
+      showError('modal_due_date', 'Due date must be on or after billing date.');
+      isValid = false;
+    }
+    if (contact && !/^\+?[\d\s-]{7,15}$/.test(contact)) {
+      showError('modal_customer_contact', 'Please enter a valid phone number (7–15 digits).');
+      isValid = false;
+    }
+    if (zip && !/^\d{5}(?:-\d{4})?$/.test(zip)) {
+      showError('modal_customer_zip', 'Please enter a valid ZIP code (e.g., 12345 or 12345-6789).');
+      isValid = false;
+    }
 
-        customerDetails.classList.remove('hidden');
-    });
+    // 4) Bail out on error
+    if (!isValid) {
+      e.preventDefault();
+      return;
+    }
+
+    // 5) Populate the main form
+    document.getElementById('id_customer_email').value   = email;
+    document.getElementById('id_customer_name').value    = name;
+    document.getElementById('id_customer_contact').value = contact;
+    document.getElementById('id_customer_address').value = address;
+    document.getElementById('id_customer_country').value = country;
+    document.getElementById('id_customer_zip').value     = zip;
+    document.getElementById('id_customer_state').value   = state;
+    document.getElementById('id_customer_city').value    = city;
+    document.getElementById('id_billing_date').value     = billingDate;
+    document.getElementById('id_due_date').value         = dueDate;
+    document.getElementById('id_notes').value            = notes;
+    document.getElementById('customer-details').classList.remove('hidden');
+
+    // 6) **Trigger Flowbite's hide** by clicking the existing [data-modal-hide] button:
+    const hideBtn = document
+      .getElementById('add-customer-modal')
+      .querySelector('[data-modal-hide="add-customer-modal"]');
+    if (hideBtn) {
+      hideBtn.click();
+    }
+
+    // 7) Reset modal fields
+    document
+      .querySelectorAll('#add-customer-modal input, #add-customer-modal textarea')
+      .forEach(field => field.value = '');
+  });
+
+// Helper to show an error under a field
+function showError(fieldId, message) {
+  const span = document.getElementById(fieldId + '_error');
+  span.textContent = message;
+  span.classList.remove('hidden');
+}
+
+
 
     document.addEventListener('DOMContentLoaded', function() {
     // Main form: Set billing_date to today and due_date to today + 4 days if not already set

@@ -71,11 +71,16 @@ def dashboard(request):
 def invoice_create(request):
     active_profile = Profile.objects.filter(user=request.user, is_active=True).first()
     profiles = Profile.objects.filter(user=request.user)
-    customers = InvoiceCustomer.objects.all().values_list('customer_name', 'customer_email', 'customer_contact', 'customer_address', 'customer_country', 'customer_zip', 'customer_state', 'customer_city').distinct().order_by('customer_name')
+    # customers = InvoiceCustomer.objects.all().values_list('customer_name', 'customer_email', 'customer_contact', 'customer_address', 'customer_country', 'customer_zip', 'customer_state', 'customer_city').distinct().order_by('customer_name')
+    customers = InvoiceCustomer.objects.filter(customeuser_id=request.user).values_list('customer_name', 'customer_email','customer_contact','customer_address', 'customer_country', 'customer_zip','customer_state', 'customer_city').distinct().order_by('customer_name')
     # print(customers)
-    latest_products = Product.objects.values('item_name').annotate(max_id=Max('invoice_item_id')).order_by()
-    products = Product.objects.filter(invoice_item_id__in=[p['max_id'] for p in latest_products]).values_list('item_name', 'item_price', flat=False).order_by('item_name')
-    # print(products)
+    # latest_products = Product.objects.values('item_name').annotate(max_id=Max('invoice_item_id')).order_by()
+    # products = Product.objects.filter(invoice_item_id__in=[p['max_id'] for p in latest_products]).values_list('item_name', 'item_price', flat=False).order_by('item_name')
+    latest_products = (Product.objects.filter(customuser_id=request.user.id).values('item_name')
+    .annotate(max_id=Max('invoice_item_id')))
+    products = (Product.objects.filter(customuser_id=request.user.id,invoice_item_id__in=[p['max_id'] for p in latest_products])
+        .values_list('item_name', 'item_price', flat=False).order_by('item_name'))
+    print(products)
     if not active_profile:
         messages.warning(request, 'Please set up and activate a business profile before creating invoices.')
         return redirect('users:profile_list')
@@ -97,6 +102,8 @@ def invoice_create(request):
             instances = formset.save(commit=False)
             for instance in instances:
                 instance.invoice = invoice
+                instance.customuser = request.user  # Add this line
+                instance.userprofile = active_profile
                 instance.save()
             
             messages.success(request, 'Invoice created successfully.')
@@ -703,7 +710,8 @@ def invoice_pdf_view(request, invoice_id):
 # ---------- for invoice all customer ----------- #
 @login_required
 def customer_list(request):
-    customers = InvoiceCustomer.objects.all()
+    # customers = InvoiceCustomer.objects.all()
+    customers = InvoiceCustomer.objects.filter(customeuser_id=request.user)
     return render(request, 'customer/customer_list.html', {'customers': customers, 'title': 'Customer List'})
 
 @login_required
@@ -753,7 +761,8 @@ def customer_delete(request, customer_id):
 # --------- for product ------------ #
 @login_required
 def product_list(request):
-    products = Product.objects.all()
+    # products = Product.objects.all()
+    products = Product.objects.filter(customuser_id=request.user.id)
     return render(request, 'products/product_list.html', {'products': products, 'title': 'Products'})
 
 @login_required

@@ -101,6 +101,8 @@ class Invoice(models.Model):
         if not existing_customer:
             InvoiceCustomer.objects.create(
                 invoice=self,
+                customeuser_id=self.user,
+                userprofile_id=self.profile,
                 customer_name=self.customer_name,
                 customer_email=self.customer_email,
                 customer_contact=self.customer_contact,
@@ -114,6 +116,8 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, related_name='items', on_delete=models.CASCADE)
+    customuser = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, db_column='customuser_id')
+    userprofile = models.ForeignKey(Profile, on_delete=models.PROTECT, null=True, blank=True, db_column='userprofile_id')
     item = models.CharField(max_length=200)
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -132,6 +136,8 @@ class InvoiceItem(models.Model):
         product_data = {
             'item_name': self.item,
             # 'item_price': self.unit_price,
+            'customuser': self.customuser,  # Add this
+            'userprofile': self.userprofile
         }
 
         # Check if a product with the same details already exists
@@ -142,7 +148,9 @@ class InvoiceItem(models.Model):
             Product.objects.create(
                 invoice_item=self,
                 item_name=self.item,
-                item_price=self.unit_price
+                item_price=self.unit_price,
+                customuser= self.customuser,  # Add this
+                userprofile= self.userprofile
                 )
 
     def __str__(self):
@@ -150,6 +158,8 @@ class InvoiceItem(models.Model):
 
 class Product(models.Model):
     invoice_item = models.OneToOneField(InvoiceItem, on_delete=models.CASCADE, primary_key=True)
+    customuser = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, db_column='customuser_id')
+    userprofile = models.ForeignKey(Profile, on_delete=models.PROTECT, null=True, blank=True, db_column='userprofile_id')
     item_name = models.CharField(max_length=200)
     item_price = models.DecimalField(max_digits=10, decimal_places=2)
 
@@ -166,6 +176,8 @@ class InvoiceCustomer(models.Model):
     customer_zip = models.CharField(max_length=7, blank=True, help_text="Postal/Zip code")
     customer_state = models.CharField(max_length=50, blank=True)
     customer_city = models.CharField(max_length=50, blank=True)
+    customeuser_id = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE, null=True, blank=True,db_column='customuser_id')
+    userprofile_id = models.ForeignKey(Profile, on_delete=models.PROTECT, null=True, blank=True, db_column='userprofile_id')
 
     def __str__(self):
         return f"{self.customer_name} ({self.customer_email}) - Invoice #{self.invoice.invoice_id}"
